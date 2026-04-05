@@ -1,3 +1,4 @@
+# Retiring this code base on Apr 5 2026
 # PsychDx `index.html` Functionality Guide
 
 This project is a **single-file web application** in `index.html` that combines UI, styles, and logic for a psychiatric clinical decision-support workflow.
