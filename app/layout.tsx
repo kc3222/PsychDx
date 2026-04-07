@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PsychDx — Auth",
-  description: "Sign in to test Supabase",
+  title: "PsychDx",
+  description: "Clinical command center",
 };
 
 export default function RootLayout({
@@ -13,14 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <nav className="nav">
-          <a href="/">Home</a>
-          <a href="/login">Log in</a>
-          <a href="/signup">Sign up</a>
-        </nav>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
