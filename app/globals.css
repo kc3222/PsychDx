@@ -1,11 +1,12 @@
 :root {
-  --bg: #171717;
-  --surface: #222;
-  --border: #3b3b3b;
-  --text: #ececec;
-  --muted: #aaaaaa;
-  --accent: #5f5ce0;
-  --accent-hover: #4e4bc8;
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --border: #d9e2ef;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --block-bg: #f2f2f1;
   --danger: #f87171;
   --radius: 10px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -150,14 +151,14 @@ button[type="submit"]:disabled {
   border: 0;
   border-radius: 0;
   overflow: hidden;
-  background: #1f1f1f;
+  background: #ffffff;
   display: grid;
   grid-template-columns: 300px 1fr;
 }
 
 .ccc-sidebar {
-  background: #00183f;
-  border-right: 1px solid #0f2f65;
+  background: #cfe3ff;
+  border-right: 1px solid #a9ccff;
   padding: 1.4rem;
   display: flex;
   flex-direction: column;
@@ -172,7 +173,7 @@ button[type="submit"]:disabled {
 .ccc-sidebar button {
   border: 1px solid transparent;
   background: transparent;
-  color: #ced8e8;
+  color: #1e3a8a;
   padding: 0.9rem;
   border-radius: 12px;
   text-align: left;
@@ -181,8 +182,9 @@ button[type="submit"]:disabled {
 }
 
 .ccc-sidebar button.active {
-  border-color: #2e65ac;
-  background: #11356a;
+  border-color: #3b82f6;
+  background: #7fb4fb;
+  color: #1e3a8a;
 }
 
 .ccc-content {
@@ -199,9 +201,9 @@ button[type="submit"]:disabled {
 }
 
 .panel {
-  border: 1px solid #4a4a4a;
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: #252525;
+  background: var(--block-bg);
   padding: 1rem;
   min-height: 0;
 }
@@ -224,8 +226,8 @@ button[type="submit"]:disabled {
 }
 
 .pill {
-  background: #dde8f4;
-  color: #2e74c4;
+  background: #e0ecff;
+  color: #1d4ed8;
   border-radius: 999px;
   padding: 0.5rem 1rem;
   font-weight: 700;
@@ -243,7 +245,7 @@ button[type="submit"]:disabled {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.95rem;
-  background: #262626;
+  background: var(--block-bg);
 }
 
 .stat-box span {
@@ -276,9 +278,9 @@ button[type="submit"]:disabled {
 }
 
 .quick-add button {
-  border: 1px solid #5a6f8c;
-  background: #e7edf5;
-  color: #3a4f6e;
+  border: 1px solid #bfd3f3;
+  background: #edf4ff;
+  color: #1e40af;
   border-radius: 999px;
   padding: 0.45rem 0.85rem;
   cursor: pointer;
@@ -291,10 +293,10 @@ button[type="submit"]:disabled {
 }
 
 .symptom-card {
-  border: 1px solid #4a4a4a;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.5rem;
-  background: #292929;
+  background: var(--block-bg);
 }
 
 .symptom-line {
@@ -311,9 +313,9 @@ button[type="submit"]:disabled {
 }
 
 .timeline-toggle {
-  border: 1px solid #666;
+  border: 1px solid #bfd3f3;
   background: transparent;
-  color: #cfcfcf;
+  color: #1e40af;
   border-radius: 6px;
   padding: 0.2rem 0.45rem;
   font-size: 0.72rem;
@@ -326,7 +328,7 @@ button[type="submit"]:disabled {
   margin: 0;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid #696969;
+  border: 1px solid #bfd3f3;
 }
 
 .timeline-grid {
@@ -357,7 +359,7 @@ h3 {
   margin: 1rem 0 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #d2d2d2;
+  color: #334155;
 }
 
 .results-grid {
@@ -368,10 +370,10 @@ h3 {
 }
 
 .result-card {
-  border: 1px solid #535353;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.75rem;
-  background: #2a2a2a;
+  background: var(--block-bg);
 }
 
 .result-card.top {
@@ -387,7 +389,7 @@ h3 {
 .bar {
   height: 10px;
   border-radius: 999px;
-  background: #1d1d1d;
+  background: #e7edf6;
   overflow: hidden;
 }
 
@@ -412,10 +414,10 @@ h3 {
 }
 
 .summary-box {
-  border: 1px solid #4c4c4c;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.8rem;
-  background: #2a2a2a;
+  background: var(--block-bg);
   margin-bottom: 0.7rem;
 }
 
@@ -423,7 +425,7 @@ h3 {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #b9b9b9;
+  color: #64748b;
 }
 
 .summary-box p {

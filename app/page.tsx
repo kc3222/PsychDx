@@ -233,7 +233,7 @@ export default function HomePage() {
                             )
                           }
                         >
-                          {s.expanded ? "done" : "+ timeline"}
+                          {s.expanded ? "-" : "+"}
                         </button>
                         <button type="button" onClick={() => setSymptoms((prev) => prev.filter((_, i) => i !== idx))}>
                           x
