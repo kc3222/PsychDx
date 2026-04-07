@@ -37,7 +37,7 @@ export default function SignupPage() {
       return;
     }
     if (data.session) {
-      router.push("/");
+      router.push("/home");
       router.refresh();
       return;
     }

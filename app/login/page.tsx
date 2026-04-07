@@ -26,7 +26,7 @@ export default function LoginPage() {
       setError(signInError.message);
       return;
     }
-    router.push("/");
+    router.push("/home");
     router.refresh();
   }
 

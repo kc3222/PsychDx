@@ -301,6 +301,10 @@ button[type="submit"]:disabled {
   color: #1e3a8a;
 }
 
+.ccc-sidebar .signout-btn {
+  margin-top: auto;
+}
+
 .ccc-content {
   padding: 1.6rem 2rem 2rem;
   overflow: visible;
