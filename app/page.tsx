@@ -1,6 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  ClipboardList,
+  FileText,
+  History,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Users,
+} from "lucide-react";
 
 type Symptom = { text: string; onset: string; frequency: string; pattern: string; expanded: boolean };
 type RiskLevel = "low" | "moderate" | "high" | "emergency";
@@ -27,6 +35,13 @@ const QUICK_ADD = [
   "Poor appetite",
   "Grandiosity",
   "Pressured speech",
+];
+
+const SIDEBAR_ITEMS = [
+  { key: "diagnose", label: "Diagnose", shortLabel: "Dx", icon: ClipboardList, active: true },
+  { key: "patients", label: "Patients", shortLabel: "Pt", icon: Users, active: false },
+  { key: "history", label: "History", shortLabel: "Hx", icon: History, active: false },
+  { key: "reports", label: "Reports", shortLabel: "Rp", icon: FileText, active: false },
 ];
 
 const DISEASES: Disease[] = [
@@ -150,6 +165,7 @@ function computeRisk(syms: Symptom[]) {
 export default function HomePage() {
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [input, setInput] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [results, setResults] = useState<
     Array<{ disease: Disease; matched: string[]; unmatched: string[]; score: number; pct: number }>
   >([]);
@@ -183,13 +199,34 @@ export default function HomePage() {
 
   return (
     <main className="ccc-main">
-      <div className="ccc-shell">
+      <div className={`ccc-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         <aside className="ccc-sidebar">
-          <h1>PsychDx</h1>
-          <button className="active">Diagnose</button>
-          <button>Patients</button>
-          <button>History</button>
-          <button>Reports</button>
+          <div className="ccc-sidebar-top">
+            <h1 className="sidebar-title">PsychDx</h1>
+            <button
+              type="button"
+              className="sidebar-toggle"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="icon-collapsed"><PanelLeftOpen size={20} /></span>
+              <span className="icon-expanded"><PanelLeftClose size={20} /></span>
+            </button>
+          </div>
+          {SIDEBAR_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.key}
+                className={item.active ? "active" : ""}
+                aria-label={item.label}
+                title={item.label}
+              >
+                <Icon size={20} />
+                <span className="nav-label">{item.label}</span>
+              </button>
+            );
+          })}
         </aside>
         <section className="ccc-content">
           <div className="ccc-header-row">
