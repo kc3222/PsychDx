@@ -1,52 +1,41 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
-import { CANDIDATE_SESSION_COOKIE } from "@/lib/auth";
-
-function isPublicPath(pathname: string): boolean {
-  if (pathname === "/login") return true;
-  if (pathname === "/api/login") return true;
-  if (pathname === "/favicon.ico") return true;
-  if (pathname.startsWith("/_next")) return true;
-  return false;
-}
-
-async function hasValidSession(request: NextRequest): Promise<boolean> {
-  const token = request.cookies.get(CANDIDATE_SESSION_COOKIE)?.value;
-  const secret = process.env.JWT_SECRET;
-  if (!token || !secret) return false;
-  try {
-    await jwtVerify(token, new TextEncoder().encode(secret));
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
 
-  if (isPublicPath(pathname)) {
-    return NextResponse.next();
-  }
-
-  const ok = await hasValidSession(request);
-
-  if (!ok) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
     }
-    const login = new URL("/login", request.url);
-    return NextResponse.redirect(login);
-  }
+  );
 
-  if (pathname === "/") {
-    return NextResponse.rewrite(new URL("/shell", request.url));
-  }
+  await supabase.auth.getUser();
 
-  return NextResponse.next();
+  return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
