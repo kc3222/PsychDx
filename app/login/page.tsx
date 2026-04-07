@@ -31,10 +31,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
+    <main className="auth-main">
       <div className="card">
         <h1>Log in</h1>
-        <p className="subtitle">Use your Supabase project credentials.</p>
         {error ? (
           <p className="message error" role="alert">
             {error}

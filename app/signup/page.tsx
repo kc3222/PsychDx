@@ -47,10 +47,9 @@ export default function SignupPage() {
   }
 
   return (
-    <main>
+    <main className="auth-main">
       <div className="card">
         <h1>Sign up</h1>
-        <p className="subtitle">Creates a user in Supabase Auth and a profile row (with the DB trigger).</p>
         {error ? (
           <p className="message error" role="alert">
             {error}
