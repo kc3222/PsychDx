@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   FileSearch,
@@ -184,15 +184,46 @@ export default function DiagnosePage() {
     Array<{ disease: Disease; matched: string[]; unmatched: string[]; score: number; pct: number }>
   >([]);
   const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
+  const [clinicianPatients, setClinicianPatients] = useState<PatientContext[]>([]);
+  const [patientsListReady, setPatientsListReady] = useState(false);
+  const [patientMenuOpen, setPatientMenuOpen] = useState(false);
   const [savingAnalysis, setSavingAnalysis] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [openDxId, setOpenDxId] = useState<string | null>(null);
+  const addPatientWrapRef = useRef<HTMLDivElement>(null);
 
   const canAnalyze = symptoms.length >= 2;
   const analyzed = results.length > 0;
-  const canSave = analyzed && !!patientId;
+  const hasClinicianPatients = clinicianPatients.length > 0;
+
+  useEffect(() => {
+    if (!analyzed) setPatientMenuOpen(false);
+  }, [analyzed]);
   const risk = useMemo(() => computeRisk(symptoms), [symptoms]);
   const top = results[0];
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name")
+      .order("last_name", { ascending: true })
+      .order("first_name", { ascending: true })
+      .returns<PatientContext[]>()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setPatientsListReady(true);
+        if (error) {
+          setClinicianPatients([]);
+          return;
+        }
+        setClinicianPatients(data ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!patientId) {
@@ -207,6 +238,23 @@ export default function DiagnosePage() {
       .maybeSingle<PatientContext>()
       .then(({ data }) => setPatientContext(data ?? null));
   }, [patientId]);
+
+  useEffect(() => {
+    if (!patientMenuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (addPatientWrapRef.current?.contains(e.target as Node)) return;
+      setPatientMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPatientMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [patientMenuOpen]);
 
   const addSymptom = (text?: string) => {
     const value = (text ?? input).trim().toLowerCase();
@@ -232,16 +280,17 @@ export default function DiagnosePage() {
     setOpenDxId(scored[0]?.disease.id ?? null);
   };
 
-  const saveAnalysisToPatient = async () => {
-    if (!canSave || !patientId || savingAnalysis) return;
+  const saveAnalysisToPatient = async (targetPatientId: string) => {
+    if (!analyzed || !targetPatientId || savingAnalysis) return;
     setSavingAnalysis(true);
     setSaveMessage(null);
+    setPatientMenuOpen(false);
     const supabase = createClient();
 
     const { data: latestSession, error: latestError } = await supabase
       .from("sessions")
       .select("version")
-      .eq("patient_id", patientId)
+      .eq("patient_id", targetPatientId)
       .order("version", { ascending: false })
       .limit(1)
       .maybeSingle<{ version: number }>();
@@ -258,7 +307,7 @@ export default function DiagnosePage() {
     const { data: insertedSession, error: sessionError } = await supabase
       .from("sessions")
       .insert({
-        patient_id: patientId,
+        patient_id: targetPatientId,
         version: nextVersion,
         session_type: sessionType,
         status: "active",
@@ -295,7 +344,7 @@ export default function DiagnosePage() {
       return;
     }
 
-    router.push(`/patients/${patientId}`);
+    router.push(`/patients/${targetPatientId}`);
     router.refresh();
   };
 
@@ -476,16 +525,38 @@ export default function DiagnosePage() {
             <h2 className="analysis-section-label" style={{ marginBottom: 0 }}>
               Results
             </h2>
-            {patientId ? (
-              <button
-                type="button"
-                className="analysis-add-patient"
-                onClick={saveAnalysisToPatient}
-                disabled={!canSave || savingAnalysis}
-              >
-                <UserPlus size={14} strokeWidth={2} aria-hidden />
-                {savingAnalysis ? "Saving…" : "Add to patient"}
-              </button>
+            {patientsListReady && hasClinicianPatients && analyzed ? (
+              <div className="analysis-add-patient-wrap" ref={addPatientWrapRef}>
+                <button
+                  type="button"
+                  className="analysis-add-patient"
+                  disabled={savingAnalysis}
+                  aria-expanded={patientMenuOpen}
+                  aria-haspopup="listbox"
+                  aria-label="Add analysis to a patient"
+                  onClick={() => setPatientMenuOpen((o) => !o)}
+                >
+                  <UserPlus size={14} strokeWidth={2} aria-hidden />
+                  {savingAnalysis ? "Saving…" : "Add to patient"}
+                  <ChevronDown size={14} strokeWidth={2} className="analysis-add-patient-chevron" aria-hidden />
+                </button>
+                {patientMenuOpen ? (
+                  <ul className="analysis-patient-dropdown" role="listbox" aria-label="Choose patient">
+                    {clinicianPatients.map((p) => (
+                      <li key={p.id} role="none">
+                        <button
+                          type="button"
+                          role="option"
+                          disabled={savingAnalysis}
+                          onClick={() => saveAnalysisToPatient(p.id)}
+                        >
+                          {p.first_name} {p.last_name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             ) : null}
           </div>
 
