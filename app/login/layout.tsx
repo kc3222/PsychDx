@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function Page() {
+export default async function LoginLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -10,5 +11,6 @@ export default async function Page() {
   if (user) {
     redirect("/home");
   }
-  redirect("/login");
+
+  return children;
 }
