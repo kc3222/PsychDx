@@ -1,0 +1,303 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
+  .app { display: flex; height: 620px; background: #ddeaf8; border-radius: 16px; overflow: hidden; }
+  .sidebar { width: 220px; background: #c8dcf5; padding: 20px 14px; flex-shrink: 0; }
+  .sidebar-logo { font-size: 18px; font-weight: 500; color: #0c3d6e; margin-bottom: 24px; padding: 0 6px; display: flex; justify-content: space-between; align-items: center; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; font-size: 14px; color: #1a4f8a; cursor: pointer; margin-bottom: 4px; }
+  .nav-item.active { background: #a8c8f0; font-weight: 500; }
+  .nav-icon { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+  .main { flex: 1; background: #edf4fc; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+
+  .detail-header { padding: 16px 20px; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .back-btn { width: 28px; height: 28px; border-radius: 6px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--color-text-secondary); flex-shrink: 0; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: #dce8f8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #2a5fa0; flex-shrink: 0; }
+  .detail-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn-primary { background: #4a7fc1; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-secondary { background: var(--color-background-secondary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); padding: 7px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+  .tab-row { display: flex; gap: 0; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 0 20px; flex-shrink: 0; }
+  .tab-item { font-size: 13px; color: var(--color-text-secondary); padding: 12px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-item.active { color: #2a5fa0; border-bottom-color: #4a7fc1; font-weight: 500; }
+
+  .tab-content { flex: 1; overflow-y: auto; padding: 18px 20px; display: none; }
+  .tab-content.visible { display: block; }
+
+  /* Sessions tab */
+  .sessions-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .sessions-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
+  .filter-tabs { display: flex; gap: 6px; }
+  .ftab { font-size: 12px; padding: 3px 12px; border-radius: 20px; cursor: pointer; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .ftab.active { background: #dce8f8; color: #1a4f8a; border-color: #a8c8f0; font-weight: 500; }
+  .session-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
+  .session-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .session-date { font-size: 13px; color: var(--color-text-secondary); }
+  .session-ver { font-size: 12px; background: var(--color-background-secondary); color: var(--color-text-secondary); padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); }
+  .status-active { font-size: 12px; background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .dx-badge { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+  .dx-scz { background: #fce8e8; color: #a32d2d; border: 1px solid #f09595; }
+  .dx-mdd { background: #e6f0fb; color: #0c447c; border: 1px solid #85b7eb; }
+  .symptom-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tag { font-size: 12px; background: var(--color-background-secondary); color: var(--color-text-secondary); padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); }
+  .view-link { font-size: 13px; color: #2a5fa0; cursor: pointer; }
+  .dot-menu { color: var(--color-text-tertiary); margin-left: auto; cursor: pointer; letter-spacing: 2px; font-size: 14px; }
+
+  /* Overview tab */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .stat-card { background: var(--color-background-secondary); border-radius: 10px; padding: 14px; }
+  .stat-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-value.accent { color: #2a5fa0; }
+  .stat-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+  .key-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .key-tag { font-size: 13px; background: #dce8f8; color: #1a4f8a; padding: 5px 12px; border-radius: 20px; }
+
+  /* Symptom Timeline tab */
+  .timeline-block { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .timeline-date { font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 8px; }
+  .timeline-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .new-tag { font-size: 11px; background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+  .gone-tag { font-size: 11px; background: #fce8e8; color: #a32d2d; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+
+  /* Diagnostic Evolution tab */
+  .evo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .evo-label { font-size: 13px; color: var(--color-text-secondary); width: 36px; flex-shrink: 0; }
+  .evo-bar-wrap { flex: 1; height: 22px; background: var(--color-background-secondary); border-radius: 6px; overflow: hidden; }
+  .evo-bar { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 500; }
+  .evo-bar.scz { background: #f7c1c1; color: #791f1f; }
+  .evo-bar.mdd { background: #b5d4f4; color: #0c447c; }
+  .evo-pct { font-size: 12px; color: var(--color-text-secondary); width: 36px; text-align: right; flex-shrink: 0; }
+  .evo-session { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; }
+
+  /* Symptom Tracker tab */
+  .tracker-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .tracker-row:last-child { border-bottom: none; }
+  .tracker-name { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+  .tracker-dots { display: flex; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.filled { background: #4a7fc1; }
+  .dot.empty { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); }
+  .tracker-trend { font-size: 12px; width: 60px; text-align: right; }
+  .trend-same { color: var(--color-text-tertiary); }
+  .trend-new { color: #3b6d11; }
+  .tracker-legend { display: flex; gap: 14px; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      PsychDx
+      <span style="font-size:18px;opacity:0.5;cursor:pointer;">⊣</span>
+    </div>
+    <div class="nav-item" id="nav-diagnose">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11v6M9 14h6"/></svg>
+      Diagnose
+    </div>
+    <div class="nav-item active" id="nav-patients">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Patients
+    </div>
+    <div class="nav-item" id="nav-history">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      History
+    </div>
+    <div class="nav-item" id="nav-reports">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Reports
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="detail-header">
+      <div class="back-btn">←</div>
+      <div class="avatar">MT</div>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">Mr T</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);">Under 18 · Male · 2 sessions</div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn-primary">+ New analysis</button>
+      </div>
+    </div>
+
+    <div class="tab-row">
+      <div class="tab-item active" onclick="switchTab('sessions')">Sessions</div>
+      <div class="tab-item" onclick="switchTab('overview')">Overview</div>
+      <div class="tab-item" onclick="switchTab('timeline')">Symptom Timeline</div>
+      <div class="tab-item" onclick="switchTab('evolution')">Diagnostic Evolution</div>
+      <div class="tab-item" onclick="switchTab('tracker')">Symptom Tracker</div>
+    </div>
+
+    <!-- Sessions -->
+    <div class="tab-content visible" id="tab-sessions">
+      <div class="sessions-header">
+        <span class="sessions-label">2 Sessions</span>
+        <div class="filter-tabs">
+          <span class="ftab active">Active (2)</span>
+          <span class="ftab">Archived</span>
+        </div>
+      </div>
+      <div class="session-card">
+        <div class="session-row">
+          <span class="session-date">07 Apr 2026</span>
+          <span class="session-ver">v2 · Follow-up evaluation</span>
+          <span class="status-active">Active</span>
+          <span class="dx-badge dx-scz" style="margin-left:auto;">SCZ 60%</span>
+          <span class="dot-menu">···</span>
+        </div>
+        <div class="symptom-tags">
+          <span class="tag">insomnia</span>
+          <span class="tag">fatigue</span>
+          <span class="tag">social withdrawal</span>
+          <span class="tag">paranoid delusions</span>
+        </div>
+        <div class="view-link">⊙ View full analysis</div>
+      </div>
+      <div class="session-card">
+        <div class="session-row">
+          <span class="session-date">07 Apr 2026</span>
+          <span class="session-ver">v1 · Initial assessment</span>
+          <span class="status-active">Active</span>
+          <span class="dx-badge dx-mdd" style="margin-left:auto;">MDD 41%</span>
+          <span class="dot-menu">···</span>
+        </div>
+        <div class="symptom-tags">
+          <span class="tag">insomnia</span>
+          <span class="tag">fatigue</span>
+          <span class="tag">social withdrawal</span>
+        </div>
+        <div class="view-link">⊙ View full analysis</div>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="tab-content" id="tab-overview">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Total visits</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value accent">SCZ</div>
+          <div class="stat-label">Latest diagnosis</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:16px;">07 Apr 2026</div>
+          <div class="stat-label">Last visit</div>
+        </div>
+      </div>
+      <div class="section-label" style="margin-bottom:10px;">Key symptoms</div>
+      <div class="key-tags">
+        <span class="key-tag">insomnia</span>
+        <span class="key-tag">fatigue</span>
+        <span class="key-tag">social withdrawal</span>
+        <span class="key-tag">paranoid delusions</span>
+      </div>
+    </div>
+
+    <!-- Symptom Timeline -->
+    <div class="tab-content" id="tab-timeline">
+      <div class="timeline-block">
+        <div class="timeline-date">07 Apr 2026 · v2 Follow-up</div>
+        <div class="timeline-title">Symptoms this session</div>
+        <div class="symptom-tags">
+          <span class="tag">insomnia</span>
+          <span class="tag">fatigue</span>
+          <span class="tag">social withdrawal</span>
+          <span class="tag" style="background:#fce8e8;color:#a32d2d;border-color:#f09595;">paranoid delusions <span class="new-tag" style="margin-left:4px;">new</span></span>
+        </div>
+      </div>
+      <div class="timeline-block">
+        <div class="timeline-date">07 Apr 2026 · v1 Initial</div>
+        <div class="timeline-title">Symptoms this session</div>
+        <div class="symptom-tags">
+          <span class="tag">insomnia</span>
+          <span class="tag">fatigue</span>
+          <span class="tag">social withdrawal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Evolution -->
+    <div class="tab-content" id="tab-evolution">
+      <div style="margin-bottom:18px;">
+        <div class="evo-session">v1 · Initial assessment — 07 Apr 2026</div>
+        <div class="evo-row">
+          <span class="evo-label" style="font-size:12px;">MDD</span>
+          <div class="evo-bar-wrap">
+            <div class="evo-bar mdd" style="width:41%;">MDD</div>
+          </div>
+          <span class="evo-pct">41%</span>
+        </div>
+      </div>
+      <div>
+        <div class="evo-session">v2 · Follow-up evaluation — 07 Apr 2026</div>
+        <div class="evo-row">
+          <span class="evo-label" style="font-size:12px;">SCZ</span>
+          <div class="evo-bar-wrap">
+            <div class="evo-bar scz" style="width:60%;">SCZ</div>
+          </div>
+          <span class="evo-pct">60%</span>
+        </div>
+        <div class="evo-row">
+          <span class="evo-label" style="font-size:12px;">MDD</span>
+          <div class="evo-bar-wrap">
+            <div class="evo-bar mdd" style="width:22%;">MDD</div>
+          </div>
+          <span class="evo-pct">22%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Symptom Tracker -->
+    <div class="tab-content" id="tab-tracker">
+      <div class="tracker-legend">
+        <div class="legend-item"><div class="dot filled"></div> Present</div>
+        <div class="legend-item"><div class="dot empty"></div> Absent</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--color-text-tertiary);flex:1;">Symptom</span>
+        <span style="font-size:11px;color:var(--color-text-tertiary);width:70px;text-align:center;">v1 → v2</span>
+        <span style="font-size:11px;color:var(--color-text-tertiary);width:60px;text-align:right;">Status</span>
+      </div>
+      <div class="tracker-row">
+        <span class="tracker-name">insomnia</span>
+        <div class="tracker-dots" style="width:70px;justify-content:center;">
+          <div class="dot filled"></div><div class="dot filled"></div>
+        </div>
+        <span class="tracker-trend trend-same" style="width:60px;text-align:right;">persistent</span>
+      </div>
+      <div class="tracker-row">
+        <span class="tracker-name">fatigue</span>
+        <div class="tracker-dots" style="width:70px;justify-content:center;">
+          <div class="dot filled"></div><div class="dot filled"></div>
+        </div>
+        <span class="tracker-trend trend-same" style="width:60px;text-align:right;">persistent</span>
+      </div>
+      <div class="tracker-row">
+        <span class="tracker-name">social withdrawal</span>
+        <div class="tracker-dots" style="width:70px;justify-content:center;">
+          <div class="dot filled"></div><div class="dot filled"></div>
+        </div>
+        <span class="tracker-trend trend-same" style="width:60px;text-align:right;">persistent</span>
+      </div>
+      <div class="tracker-row">
+        <span class="tracker-name">paranoid delusions</span>
+        <div class="tracker-dots" style="width:70px;justify-content:center;">
+          <div class="dot empty"></div><div class="dot filled"></div>
+        </div>
+        <span class="tracker-trend trend-new" style="width:60px;text-align:right;">new ↑</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('visible'));
+  document.getElementById('tab-' + name).classList.add('visible');
+  event.target.classList.add('active');
+}
+</script>
