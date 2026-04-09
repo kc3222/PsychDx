@@ -657,6 +657,95 @@ button[type="submit"]:disabled {
   font-size: 16px;
 }
 
+.patients-view .patient-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.patients-view .patient-modal {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+  padding: 1rem;
+}
+
+.patients-view .patient-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.patients-view .patient-modal-head h3 {
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.patients-view .patient-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0.5px solid rgba(15, 23, 42, 0.15);
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.patients-view .patient-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.patients-view .patient-modal label {
+  display: block;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.patients-view .patient-modal label input,
+.patients-view .patient-modal label select,
+.patients-view .patient-modal label textarea {
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  width: 100%;
+  border: 0.5px solid rgba(15, 23, 42, 0.18);
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #0f172a;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.patients-view .patient-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.patients-view .patient-modal-actions .btn-primary,
+.patients-view .patient-modal-actions .btn-secondary {
+  flex: 1 1 0;
+  width: 100%;
+}
+
 .diagnose-stack {
   margin-top: 0.8rem;
   display: flex;

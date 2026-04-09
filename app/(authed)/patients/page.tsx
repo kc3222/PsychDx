@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import NewPatientButton from "./NewPatientButton";
 
 type PatientRow = {
   id: string;
@@ -136,9 +137,7 @@ export default async function PatientsPage() {
           <div className="topbar-title">Patients</div>
           <div className="topbar-sub">{patientCount} patients</div>
         </div>
-        <button className="btn-primary" type="button" disabled>
-          + New patient
-        </button>
+        <NewPatientButton />
       </div>
 
       <div className="search-row">
