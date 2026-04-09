@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ClipboardList } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Symptom = { text: string; onset: string; frequency: string; pattern: string; expanded: boolean };
 type RiskLevel = "low" | "moderate" | "high" | "emergency";
@@ -11,6 +13,12 @@ type Disease = {
   short: string;
   minCriteria: number;
   criteria: Array<{ label: string; kw: string[] }>;
+};
+
+type PatientContext = {
+  id: string;
+  first_name: string;
+  last_name: string;
 };
 
 const QUICK_ADD = [
@@ -149,16 +157,38 @@ function computeRisk(syms: Symptom[]) {
 }
 
 export default function DiagnosePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const patientId = searchParams.get("patientId");
+
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [input, setInput] = useState("");
   const [results, setResults] = useState<
     Array<{ disease: Disease; matched: string[]; unmatched: string[]; score: number; pct: number }>
   >([]);
+  const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
+  const [savingAnalysis, setSavingAnalysis] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const canAnalyze = symptoms.length >= 2;
   const analyzed = results.length > 0;
+  const canSave = analyzed && !!patientId;
   const risk = useMemo(() => computeRisk(symptoms), [symptoms]);
   const top = results[0];
+
+  useEffect(() => {
+    if (!patientId) {
+      setPatientContext(null);
+      return;
+    }
+    const supabase = createClient();
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name")
+      .eq("id", patientId)
+      .maybeSingle<PatientContext>()
+      .then(({ data }) => setPatientContext(data ?? null));
+  }, [patientId]);
 
   const addSymptom = (text?: string) => {
     const value = (text ?? input).trim().toLowerCase();
@@ -180,6 +210,74 @@ export default function DiagnosePage() {
     });
     scored.sort((a, b) => b.pct - a.pct);
     setResults(scored);
+    setSaveMessage(null);
+  };
+
+  const saveAnalysisToPatient = async () => {
+    if (!canSave || !patientId || savingAnalysis) return;
+    setSavingAnalysis(true);
+    setSaveMessage(null);
+    const supabase = createClient();
+
+    const { data: latestSession, error: latestError } = await supabase
+      .from("sessions")
+      .select("version")
+      .eq("patient_id", patientId)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ version: number }>();
+
+    if (latestError) {
+      setSavingAnalysis(false);
+      setSaveMessage(latestError.message);
+      return;
+    }
+
+    const nextVersion = (latestSession?.version ?? 0) + 1;
+    const sessionType = nextVersion === 1 ? "initial_assessment" : "follow_up_evaluation";
+
+    const { data: insertedSession, error: sessionError } = await supabase
+      .from("sessions")
+      .insert({
+        patient_id: patientId,
+        version: nextVersion,
+        session_type: sessionType,
+        status: "active",
+      })
+      .select("id")
+      .single<{ id: string }>();
+
+    if (sessionError || !insertedSession) {
+      setSavingAnalysis(false);
+      setSaveMessage(sessionError?.message ?? "Could not create session.");
+      return;
+    }
+
+    const sessionId = insertedSession.id;
+    const scoreRows = results.map((r, idx) => ({
+      session_id: sessionId,
+      diagnosis: r.disease.name,
+      confidence_pct: r.pct,
+      rank: idx + 1,
+    }));
+    const symptomRows = symptoms.map((s) => ({
+      session_id: sessionId,
+      symptom: s.text,
+    }));
+
+    const [{ error: scoreError }, { error: symptomError }] = await Promise.all([
+      supabase.from("diagnostic_scores").insert(scoreRows),
+      symptomRows.length ? supabase.from("session_symptoms").insert(symptomRows) : Promise.resolve({ error: null }),
+    ]);
+
+    setSavingAnalysis(false);
+    if (scoreError || symptomError) {
+      setSaveMessage(scoreError?.message ?? symptomError?.message ?? "Failed to save analysis details.");
+      return;
+    }
+
+    router.push(`/patients/${patientId}`);
+    router.refresh();
   };
 
   return (
@@ -193,6 +291,11 @@ export default function DiagnosePage() {
           <ClipboardList size={22} />
         </span>
       </div>
+      {patientContext ? (
+        <div className="analysis-patient-context">
+          Saving analysis for <strong>{patientContext.first_name} {patientContext.last_name}</strong>
+        </div>
+      ) : null}
       <div className="diagnose-stack">
         <section className="panel">
           <div className="panel-head">Patient symptoms</div>
@@ -301,6 +404,21 @@ export default function DiagnosePage() {
           <button className="analyze-btn" type="button" onClick={analyze} disabled={!canAnalyze}>
             {analyzed ? "Re-analyze" : "Analyze symptoms"}
           </button>
+          {patientId ? (
+            <button
+              className="save-analysis-btn"
+              type="button"
+              onClick={saveAnalysisToPatient}
+              disabled={!canSave || savingAnalysis}
+            >
+              {savingAnalysis ? "Saving..." : "Save to patient"}
+            </button>
+          ) : null}
+          {saveMessage ? (
+            <p className="message error" role="alert">
+              {saveMessage}
+            </p>
+          ) : null}
         </section>
 
         <section className="panel">

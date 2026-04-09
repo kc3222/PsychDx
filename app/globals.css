@@ -482,6 +482,10 @@ button[type="submit"]:disabled {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .patients-view .btn-primary:disabled {
@@ -907,6 +911,35 @@ button[type="submit"]:disabled {
 .analyze-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.save-analysis-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid #5d97d8;
+  border-radius: 10px;
+  background: #edf4ff;
+  color: #1e40af;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.98rem;
+}
+
+.save-analysis-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.analysis-patient-context {
+  margin-top: 0.8rem;
+  margin-bottom: -0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  background: #f5f9ff;
+  color: #334155;
+  font-size: 0.92rem;
 }
 
 h3 {

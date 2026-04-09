@@ -159,9 +159,9 @@ export default async function PatientDetailPage({
           <div className="detail-sub">{formatAgeGender(patient)}</div>
         </div>
         <div className="detail-actions">
-          <button className="btn-primary" type="button" disabled>
+          <Link className="btn-primary" href={`/home?patientId=${patient.id}`}>
             + New analysis
-          </button>
+          </Link>
           <button className="btn-secondary" type="button" disabled>
             Overview
           </button>
