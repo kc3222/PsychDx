@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardList } from "lucide-react";
+import {
+  ChevronDown,
+  FileSearch,
+  FileText,
+  MoreHorizontal,
+  UserPlus,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -120,6 +126,10 @@ const RISK_TRIGGERS: Record<Exclude<RiskLevel, "low">, string[]> = {
   ],
 };
 
+function displaySymptomLabel(text: string) {
+  return text.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function scoreDisease(disease: Disease, syms: Symptom[]) {
   const texts = syms.map((s) => s.text);
   const matched: string[] = [];
@@ -156,6 +166,13 @@ function computeRisk(syms: Symptom[]) {
   return { level: "low" as RiskLevel, triggers: [] };
 }
 
+function riskFollowupCopy(level: RiskLevel) {
+  if (level === "emergency") return "Immediate psychiatric safety assessment recommended.";
+  if (level === "high") return "Prompt specialist evaluation recommended.";
+  if (level === "moderate") return "Follow-up within 1–2 weeks recommended.";
+  return "No major acute risk indicators detected.";
+}
+
 export default function DiagnosePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -169,6 +186,7 @@ export default function DiagnosePage() {
   const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
   const [savingAnalysis, setSavingAnalysis] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [openDxId, setOpenDxId] = useState<string | null>(null);
 
   const canAnalyze = symptoms.length >= 2;
   const analyzed = results.length > 0;
@@ -211,6 +229,7 @@ export default function DiagnosePage() {
     scored.sort((a, b) => b.pct - a.pct);
     setResults(scored);
     setSaveMessage(null);
+    setOpenDxId(scored[0]?.disease.id ?? null);
   };
 
   const saveAnalysisToPatient = async () => {
@@ -280,208 +299,287 @@ export default function DiagnosePage() {
     router.refresh();
   };
 
+  const confidenceClass =
+    top && top.pct > 60 ? "" : top && top.pct > 40 ? "moderate" : top ? "low" : "";
+
   return (
-    <>
-      <div className="ccc-header-row">
-        <div className="ccc-title-row">
-          <h2>New Analysis</h2>
-          <span className="pill">DSM-5 aligned</span>
+    <div className="analysis-page">
+      <header className="analysis-page-header">
+        <div className="analysis-page-title-row">
+          <h1 className="analysis-page-title">New Analysis</h1>
+          <span className="analysis-page-badge">DSM-5 aligned</span>
         </div>
-        <span className="ccc-title-icon" aria-hidden="true">
-          <ClipboardList size={22} />
-        </span>
-      </div>
+        <button type="button" className="analysis-page-menu" aria-label="More options">
+          <MoreHorizontal size={18} strokeWidth={2} />
+        </button>
+      </header>
+
       {patientContext ? (
-        <div className="analysis-patient-context">
-          Saving analysis for <strong>{patientContext.first_name} {patientContext.last_name}</strong>
-        </div>
+        <p className="analysis-patient-banner">
+          Saving analysis for{" "}
+          <strong>
+            {patientContext.first_name} {patientContext.last_name}
+          </strong>
+        </p>
       ) : null}
-      <div className="diagnose-stack">
-        <section className="panel">
-          <div className="panel-head">Patient symptoms</div>
-          <div className="ccc-stats">
-            <div className="stat-box">
-              <span>Symptoms Entered</span>
-              <strong>{symptoms.length}</strong>
+
+      <div className="analysis-page-body">
+        <div className="analysis-col analysis-col-left">
+          <div className="analysis-left-fixed">
+            <h2 className="analysis-section-label">Overview</h2>
+            <div className="analysis-overview-row">
+              <div className="analysis-stat-card">
+                <span>Symptoms</span>
+                <strong>{symptoms.length}</strong>
+              </div>
+              <div className="analysis-stat-card">
+                <span>Risk</span>
+                <strong className={`risk-${risk.level}`}>{risk.level}</strong>
+              </div>
+              <div className="analysis-stat-card">
+                <span>Top match</span>
+                <strong>{analyzed && top ? top.disease.short : "—"}</strong>
+              </div>
             </div>
-            <div className="stat-box">
-              <span>Risk Level</span>
-              <strong className={`risk-${risk.level}`}>{risk.level}</strong>
-            </div>
-            <div className="stat-box">
-              <span>Top Match</span>
-              <strong>{analyzed ? top?.disease.short : "-"}</strong>
-            </div>
-          </div>
-          <div className="entry-row">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. persistent sadness for 3 weeks"
-              onKeyDown={(e) => e.key === "Enter" && addSymptom()}
-            />
-            <button type="button" onClick={() => addSymptom()}>
-              +
-            </button>
-          </div>
-          <div className="quick-add">
-            {QUICK_ADD.map((item) => (
-              <button key={item} type="button" onClick={() => addSymptom(item)}>
-                {item}
+
+            <h2 className="analysis-section-label analysis-section-label-spaced">Add symptom</h2>
+            <div className="analysis-add-row">
+              <input
+                className="analysis-add-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="e.g. persistent sadness for 3 weeks"
+                onKeyDown={(e) => e.key === "Enter" && addSymptom()}
+              />
+              <button type="button" className="analysis-add-btn" onClick={() => addSymptom()} aria-label="Add symptom">
+                +
               </button>
-            ))}
+            </div>
           </div>
-          <div className="symptom-list">
-            {symptoms.map((s, idx) => (
-              <div className="symptom-card" key={`${s.text}-${idx}`}>
-                <div className="symptom-line">
-                  <span>{s.text}</span>
-                  <div className="symptom-actions">
+
+          <div className="analysis-left-split">
+            <div className="analysis-left-pane analysis-left-pane-quick">
+              <h2 className="analysis-section-label analysis-section-label-spaced">Quick add</h2>
+              <div className="analysis-quick-add">
+                {QUICK_ADD.map((item) => {
+                  const key = item.toLowerCase();
+                  const isActive = symptoms.some((s) => s.text === key);
+                  return (
                     <button
+                      key={item}
                       type="button"
-                      className="timeline-toggle"
-                      onClick={() =>
-                        setSymptoms((prev) => prev.map((x, i) => (i === idx ? { ...x, expanded: !x.expanded } : x)))
-                      }
+                      className={isActive ? "is-active" : undefined}
+                      onClick={() => addSymptom(item)}
                     >
-                      {s.expanded ? "-" : "+"}
+                      {item}
                     </button>
-                    <button type="button" onClick={() => setSymptoms((prev) => prev.filter((_, i) => i !== idx))}>
-                      x
-                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="analysis-left-pane analysis-left-pane-active">
+              <h2 className="analysis-section-label analysis-section-label-spaced">Active symptoms</h2>
+              <div className="analysis-active-list">
+                {symptoms.length === 0 ? (
+                  <div className="analysis-empty-hint">
+                    <FileText size={40} strokeWidth={1.25} />
+                    <p>Add at least 2 symptoms to get started.</p>
                   </div>
-                </div>
-                {s.expanded ? (
-                  <div className="timeline-grid">
-                    <select
-                      value={s.onset}
-                      onChange={(e) =>
-                        setSymptoms((prev) => prev.map((x, i) => (i === idx ? { ...x, onset: e.target.value } : x)))
-                      }
-                    >
-                      <option value="">Onset</option>
-                      <option value="1w">1 week</option>
-                      <option value="2w">2 weeks</option>
-                      <option value="1m">1 month</option>
-                      <option value="3m">3 months</option>
-                      <option value="6m">6 months</option>
-                      <option value="1y">1 year</option>
-                      <option value="1y+">&gt;1 year</option>
-                    </select>
-                    <select
-                      value={s.frequency}
-                      onChange={(e) =>
-                        setSymptoms((prev) =>
-                          prev.map((x, i) => (i === idx ? { ...x, frequency: e.target.value } : x))
-                        )
-                      }
-                    >
-                      <option value="">Frequency</option>
-                      <option value="daily">Daily</option>
-                      <option value="most_days">Most days</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="occasional">Occasional</option>
-                    </select>
-                    <select
-                      value={s.pattern}
-                      onChange={(e) =>
-                        setSymptoms((prev) =>
-                          prev.map((x, i) => (i === idx ? { ...x, pattern: e.target.value } : x))
-                        )
-                      }
-                    >
-                      <option value="">Pattern</option>
-                      <option value="continuous">Continuous</option>
-                      <option value="episodic">Episodic</option>
-                      <option value="worsening">Worsening</option>
-                      <option value="improving">Improving</option>
-                    </select>
+                ) : (
+                  symptoms.map((s, idx) => (
+                    <div key={`${s.text}-${idx}`}>
+                      <div className="analysis-symptom-item">
+                        <span>{displaySymptomLabel(s.text)}</span>
+                        <button
+                          type="button"
+                          className="analysis-symptom-expand"
+                          aria-expanded={s.expanded}
+                          aria-label={s.expanded ? "Hide timing details" : "Timing and pattern"}
+                          onClick={() =>
+                            setSymptoms((prev) => prev.map((x, i) => (i === idx ? { ...x, expanded: !x.expanded } : x)))
+                          }
+                        >
+                          <ChevronDown size={16} className={`analysis-dx-chevron ${s.expanded ? "open" : ""}`} aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className="analysis-symptom-remove"
+                          aria-label="Remove symptom"
+                          onClick={() => setSymptoms((prev) => prev.filter((_, i) => i !== idx))}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      {s.expanded ? (
+                        <div className="analysis-symptom-meta">
+                          <select
+                            value={s.onset}
+                            onChange={(e) =>
+                              setSymptoms((prev) => prev.map((x, i) => (i === idx ? { ...x, onset: e.target.value } : x)))
+                            }
+                          >
+                            <option value="">Onset</option>
+                            <option value="1w">1 week</option>
+                            <option value="2w">2 weeks</option>
+                            <option value="1m">1 month</option>
+                            <option value="3m">3 months</option>
+                            <option value="6m">6 months</option>
+                            <option value="1y">1 year</option>
+                            <option value="1y+">&gt;1 year</option>
+                          </select>
+                          <select
+                            value={s.frequency}
+                            onChange={(e) =>
+                              setSymptoms((prev) =>
+                                prev.map((x, i) => (i === idx ? { ...x, frequency: e.target.value } : x))
+                              )
+                            }
+                          >
+                            <option value="">Frequency</option>
+                            <option value="daily">Daily</option>
+                            <option value="most_days">Most days</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="occasional">Occasional</option>
+                          </select>
+                          <select
+                            value={s.pattern}
+                            onChange={(e) =>
+                              setSymptoms((prev) =>
+                                prev.map((x, i) => (i === idx ? { ...x, pattern: e.target.value } : x))
+                              )
+                            }
+                          >
+                            <option value="">Pattern</option>
+                            <option value="continuous">Continuous</option>
+                            <option value="episodic">Episodic</option>
+                            <option value="worsening">Worsening</option>
+                            <option value="improving">Improving</option>
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button className="analysis-reanalyze" type="button" onClick={analyze} disabled={!canAnalyze}>
+            {analyzed ? "Re-analyze" : "Analyze"}
+          </button>
+        </div>
+
+        <div className="analysis-page-divider" aria-hidden />
+
+        <div className="analysis-col analysis-col-right">
+          <div className="analysis-results-head">
+            <h2 className="analysis-section-label" style={{ marginBottom: 0 }}>
+              Results
+            </h2>
+            {patientId ? (
+              <button
+                type="button"
+                className="analysis-add-patient"
+                onClick={saveAnalysisToPatient}
+                disabled={!canSave || savingAnalysis}
+              >
+                <UserPlus size={14} strokeWidth={2} aria-hidden />
+                {savingAnalysis ? "Saving…" : "Add to patient"}
+              </button>
+            ) : null}
+          </div>
+
+          <div className="analysis-results-scroll">
+            {!analyzed ? (
+              <div className="analysis-empty-results">
+                <FileSearch size={48} strokeWidth={1.15} />
+                <p>Add symptoms on the left, then press Analyze.</p>
+              </div>
+            ) : (
+              <>
+                {top ? (
+                  <div className="analysis-assessment-card">
+                    <p className="analysis-inner-label">Assessment</p>
+                    <p>
+                      Most closely matches <strong>{top.disease.name}.</strong>
+                    </p>
+                    <span className={`analysis-confidence-badge ${confidenceClass}`.trim()}>
+                      {top.pct > 60 ? "High confidence" : top.pct > 40 ? "Moderate confidence" : "Low confidence"}
+                    </span>
                   </div>
                 ) : null}
-              </div>
-            ))}
+
+                <div className={`analysis-risk-panel risk-${risk.level}`}>
+                  <strong>{risk.level} risk</strong>
+                  <span>{riskFollowupCopy(risk.level)}</span>
+                  {risk.triggers.length ? (
+                    <div className="analysis-risk-chips">
+                      {risk.triggers.map((t) => (
+                        <span key={t}>{t}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <h2 className="analysis-section-label">Diagnosis</h2>
+                <div className="analysis-dx-list">
+                  {results.map((r) => {
+                    const isTop = top?.disease.id === r.disease.id;
+                    const open = openDxId === r.disease.id;
+                    return (
+                      <div key={r.disease.id} className={`analysis-dx-row ${isTop ? "is-top" : ""}`.trim()}>
+                        <button
+                          type="button"
+                          className="analysis-dx-row-head"
+                          onClick={() => setOpenDxId(open ? null : r.disease.id)}
+                          aria-expanded={open}
+                        >
+                          <span className="analysis-dx-name">{r.disease.name}</span>
+                          <span className="analysis-dx-pct">{r.pct}%</span>
+                          <ChevronDown size={16} className={`analysis-dx-chevron ${open ? "open" : ""}`} aria-hidden />
+                        </button>
+                        {open ? (
+                          <div className="analysis-dx-detail">
+                            <div className="bar">
+                              <span style={{ width: `${r.pct}%` }} />
+                            </div>
+                            <p style={{ margin: "0 0 0.35rem" }}>
+                              DSM-5 criteria met: {r.matched.length}/{r.disease.criteria.length}
+                              {r.matched.length < r.disease.minCriteria ? (
+                                <span className="minimum-badge" style={{ marginLeft: 6 }}>
+                                  Below minimum
+                                </span>
+                              ) : null}
+                            </p>
+                            <strong style={{ color: "#475569" }}>Confirmed criteria</strong>
+                            <ul>
+                              {r.matched.map((m) => (
+                                <li key={m}>{m}</li>
+                              ))}
+                            </ul>
+                            <strong style={{ color: "#475569" }}>Missing to confirm</strong>
+                            <ul>
+                              {r.unmatched.slice(0, 4).map((m) => (
+                                <li key={m}>{m}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
-          <button className="analyze-btn" type="button" onClick={analyze} disabled={!canAnalyze}>
-            {analyzed ? "Re-analyze" : "Analyze symptoms"}
-          </button>
-          {patientId ? (
-            <button
-              className="save-analysis-btn"
-              type="button"
-              onClick={saveAnalysisToPatient}
-              disabled={!canSave || savingAnalysis}
-            >
-              {savingAnalysis ? "Saving..." : "Save to patient"}
-            </button>
-          ) : null}
+
           {saveMessage ? (
-            <p className="message error" role="alert">
+            <p className="message error analysis-save-error" role="alert">
               {saveMessage}
             </p>
           ) : null}
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">Results</div>
-          {top ? (
-            <div className="summary-box">
-              <div className="summary-label">Assessment</div>
-              <p>
-                The reported symptoms most closely match <strong>{top.disease.name}</strong>.
-              </p>
-              <span className="confidence-pill">
-                {top.pct > 60 ? "High confidence" : top.pct > 40 ? "Moderate confidence" : "Low confidence"}
-              </span>
-            </div>
-          ) : null}
-          <div className={`risk-banner risk-${risk.level}`}>
-            <strong>{risk.level} risk</strong>
-            <span>
-              {risk.level === "emergency"
-                ? "Immediate psychiatric safety assessment recommended."
-                : risk.level === "high"
-                  ? "Prompt specialist evaluation recommended."
-                  : risk.level === "moderate"
-                    ? "Follow-up within 1-2 weeks recommended."
-                    : "No major acute risk indicators detected."}
-            </span>
-            {risk.triggers.length ? (
-              <div className="risk-trigger-row">
-                {risk.triggers.map((t) => (
-                  <span key={t} className="risk-trigger-chip">
-                    {t}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          <div className="results-grid">
-            {results.map((r) => (
-              <article key={r.disease.id} className={`result-card ${top?.disease.id === r.disease.id ? "top" : ""}`}>
-                <h4>
-                  {r.disease.name} <span>{r.pct}%</span>
-                </h4>
-                <div className="bar">
-                  <span style={{ width: `${r.pct}%` }} />
-                </div>
-                <p>
-                  DSM-5 criteria met: {r.matched.length}/{r.disease.criteria.length}
-                  {r.matched.length < r.disease.minCriteria ? <span className="minimum-badge">Below minimum</span> : null}
-                </p>
-                <div className="criteria-group">
-                  <strong>Confirmed criteria</strong>
-                  <ul>{r.matched.map((m) => <li key={m}>{m}</li>)}</ul>
-                </div>
-                <div className="criteria-group">
-                  <strong>Missing to confirm diagnosis</strong>
-                  <ul>{r.unmatched.slice(0, 4).map((m) => <li key={m}>{m}</li>)}</ul>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
-
