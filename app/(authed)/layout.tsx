@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "./_components/AppShell";
+import "./shell.css";
 
 export default async function AuthedLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();

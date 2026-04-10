@@ -1,0 +1,321 @@
+/* Diagnose / New Analysis (legacy CCC panels, results, risk utilities) — loaded only for /home */
+
+.diagnose-stack {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.panel-head {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.ccc-stats {
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.stat-box {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.95rem;
+  background: var(--block-bg);
+}
+
+.stat-box span {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.stat-box strong {
+  display: block;
+  font-size: 2.1rem;
+}
+
+.entry-row {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.entry-row button {
+  width: 48px;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.quick-add {
+  margin: 0.75rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.quick-add button {
+  border: 1px solid #bfd3f3;
+  background: #edf4ff;
+  color: #1e40af;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+
+.symptom-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.symptom-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem;
+  background: var(--block-bg);
+}
+
+.symptom-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.symptom-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.timeline-toggle {
+  border: 1px solid #bfd3f3;
+  background: transparent;
+  color: #1e40af;
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.symptom-line button {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid #bfd3f3;
+}
+
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.analyze-btn {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.analyze-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.save-analysis-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid #5d97d8;
+  border-radius: 10px;
+  background: #edf4ff;
+  color: #1e40af;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.98rem;
+}
+
+.save-analysis-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.analysis-patient-context {
+  margin-top: 0.8rem;
+  margin-bottom: -0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  background: #f5f9ff;
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.7rem;
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: var(--block-bg);
+}
+
+.result-card.top {
+  border-color: #5d97d8;
+}
+
+.result-card h4 {
+  margin: 0 0 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #e7edf6;
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #7ab3f4, #2e74c4);
+}
+
+.criteria-group {
+  margin-top: 0.55rem;
+}
+
+.criteria-group strong {
+  font-size: 0.85rem;
+  color: #cad6f1;
+}
+
+.criteria-group ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1rem;
+}
+
+.summary-box {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: var(--block-bg);
+  margin-bottom: 0.7rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.summary-box p {
+  margin: 0.35rem 0 0.45rem;
+}
+
+.confidence-pill {
+  border: 1px solid #e1aa54;
+  color: #e1aa54;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.minimum-badge {
+  margin-left: 0.5rem;
+  border: 1px solid #d59553;
+  color: #d59553;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.risk-banner {
+  margin-top: 1rem;
+  border: 1px solid #b89553;
+  border-radius: 12px;
+  background: #f0e7d8;
+  color: #5d3e0f;
+  padding: 0.75rem 1rem;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.risk-trigger-row {
+  width: 100%;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.risk-trigger-chip {
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.risk-banner.risk-moderate .risk-trigger-chip,
+.risk-banner.risk-low .risk-trigger-chip {
+  border: 1px solid #e5d18f;
+  background: #fbf3df;
+}
+
+.risk-banner.risk-high .risk-trigger-chip {
+  border: 1px solid #f1a2a2;
+  background: #fee2e2;
+}
+
+.risk-banner.risk-emergency .risk-trigger-chip {
+  border: 1px solid #f07777;
+  background: #fecaca;
+}
+
+.risk-low {
+  color: #166534;
+}
+
+.risk-moderate {
+  color: #a16207;
+}
+
+.risk-high {
+  color: #991b1b;
+}
+
+.risk-emergency {
+  color: #7f1d1d;
+}
+
+@media (max-width: 980px) {
+  .results-grid,
+  .ccc-stats,
+  .timeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnose-grid {
+    min-height: 0;
+  }
+}
