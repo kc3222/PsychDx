@@ -1,0 +1,38 @@
+/* Styles for `<BlueButton>` — compose `.pds-btn` + `.pds-btn--primary` | `.pds-btn--secondary`, or use `blueButtonClassName()`. */
+
+.pds-btn {
+  margin: 0;
+  appearance: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.pds-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pds-btn--primary {
+  background: #4a7fc1;
+  color: #fff;
+  border-color: transparent;
+}
+
+.pds-btn--secondary {
+  font-weight: 400;
+  background: #f3f7fd;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}

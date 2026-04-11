@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import NewAnalysisButton from "../NewAnalysisButton";
 
 type PatientRow = {
   id: string;
@@ -186,8 +187,7 @@ export default async function PatientDetailPage({
   const trackerSymptoms = Array.from(new Set([...fromSet, ...toSet])).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="patients-view">
-      <div className="detail-header">
+    <div className="patients-view"><div className="detail-header">
         <Link className="back-btn" href="/patients" aria-label="Back to patients">
           ←
         </Link>
@@ -201,12 +201,9 @@ export default async function PatientDetailPage({
           <div className="detail-sub">{formatAgeGender(patient)}</div>
         </div>
         <div className="detail-actions">
-          <Link className="btn-primary" href={`/home?patientId=${patient.id}`}>
-            + New analysis
-          </Link>
+          <NewAnalysisButton patientId={patient.id} />
         </div>
-      </div>
-      <div className="detail-main-tabs">
+      </div><div className="detail-main-tabs">
         <Link className={`main-tab ${tab === "sessions" ? "active" : ""}`} href={mk({ tab: "sessions" })}>
           Sessions
         </Link>
@@ -225,9 +222,7 @@ export default async function PatientDetailPage({
         <Link className={`main-tab ${tab === "symptom-tracker" ? "active" : ""}`} href={mk({ tab: "symptom-tracker" })}>
           Symptom Tracker
         </Link>
-      </div>
-
-      <div className="detail-body">
+      </div><div className="detail-body">
         {tab === "sessions" ? (
           <>
             <div className="sessions-label">
@@ -376,8 +371,7 @@ export default async function PatientDetailPage({
             })}
           </div>
         ) : null}
-      </div>
-    </div>
+      </div></div>
   );
 }
 
