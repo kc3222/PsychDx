@@ -14,37 +14,69 @@
   background: #edf4fc;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  /* Shared rhythm: list index + patient detail (header / secondary / scroll) */
+  --patients-shell-x: 24px;
+  --patients-header-pad-y: 18px;
+  --patients-header-min-h: 72px;
+  --patients-secondary-min-h: 46px;
+  /* Same horizontal gutter as header/search/tabs — keep scroll areas aligned */
+  --patients-scroll-x: var(--patients-shell-x);
+  --patients-scroll-pad-y: 12px;
+  --patients-session-toolbar-h: 28px;
+  --patients-session-toolbar-gap: 8px;
 }
 
-.patients-view .topbar {
-  padding: 18px 24px 16px;
+.patients-view .topbar,
+.patients-view .detail-header {
+  padding: var(--patients-header-pad-y) var(--patients-shell-x);
+  min-height: var(--patients-header-min-h);
+  box-sizing: border-box;
   border-bottom: 0.5px solid rgba(15, 23, 42, 0.12);
   background: #ffffff;
   display: flex;
   align-items: center;
+}
+
+.patients-view .topbar {
   justify-content: space-between;
 }
 
-.patients-view .topbar-title {
-  font-size: 16px;
+.patients-view .detail-header {
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.patients-view .topbar-title,
+.patients-view .detail-title {
+  font-size: 15px;
   font-weight: 500;
   color: #0f172a;
 }
 
-.patients-view .topbar-sub {
-  font-size: 13px;
+.patients-view .topbar-sub,
+.patients-view .detail-sub {
+  font-size: 12px;
   color: #64748b;
   margin-top: 2px;
 }
 
 .patients-view .search-row {
-  padding: 14px 24px;
+  padding: 0;
+  min-height: var(--patients-secondary-min-h);
+  box-sizing: border-box;
   background: #ffffff;
   border-bottom: 0.5px solid rgba(15, 23, 42, 0.12);
+  display: flex;
+  align-items: center;
 }
 
 .patients-view .search-wrap {
   position: relative;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .patients-view .search-wrap::before {
@@ -65,7 +97,7 @@
 .patients-view .search-input {
   width: 100%;
   margin: 0;
-  padding: 8px 12px 8px 32px;
+  padding: 6px 12px 6px 32px;
   font-size: 13px;
   border: 0.5px solid rgba(15, 23, 42, 0.18);
   border-radius: 8px;
@@ -76,16 +108,32 @@
 
 .patients-view .patient-list {
   flex: 1;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding-block: 0 16px;
+  padding-inline: 0;
+  margin-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: flex-start;
+  align-items: stretch;
 }
 
 .patients-view .patient-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-inline: 0;
   background: #ffffff;
   border: 0.5px solid rgba(15, 23, 42, 0.12);
   border-radius: 12px;
   padding: 14px 16px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -162,45 +210,6 @@
   border: 1px solid #c7d2fe;
 }
 
-.patients-view .btn-primary {
-  background: #4a7fc1;
-  color: white;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.patients-view .btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.patients-view .btn-secondary {
-  background: #f3f7fd;
-  color: #0f172a;
-  border: 0.5px solid rgba(15, 23, 42, 0.18);
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.patients-view .detail-header {
-  padding: 18px 24px;
-  background: #ffffff;
-  border-bottom: 0.5px solid rgba(15, 23, 42, 0.12);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .patients-view .back-btn {
   width: 28px;
   height: 28px;
@@ -217,17 +226,6 @@
   text-decoration: none;
 }
 
-.patients-view .detail-title {
-  font-size: 15px;
-  font-weight: 500;
-  color: #0f172a;
-}
-
-.patients-view .detail-sub {
-  font-size: 12px;
-  color: #64748b;
-}
-
 .patients-view .detail-actions {
   margin-left: auto;
   display: flex;
@@ -237,20 +235,27 @@
 .patients-view .detail-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  padding: var(--patients-scroll-pad-y) var(--patients-scroll-x) 24px;
 }
 
 .patients-view .detail-main-tabs {
   display: flex;
   gap: 28px;
-  padding: 0 24px;
+  padding: 0 var(--patients-shell-x);
+  min-height: var(--patients-secondary-min-h);
+  box-sizing: border-box;
   background: #f3f4f6;
   border-bottom: 1px solid rgba(15, 23, 42, 0.12);
   overflow-x: auto;
+  align-items: stretch;
 }
 
 .patients-view .detail-main-tabs .main-tab {
-  padding: 13px 0 12px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
   text-decoration: none;
   color: #8b8e95;
   font-size: 15px;
@@ -271,7 +276,8 @@
   color: #64748b;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  min-height: var(--patients-session-toolbar-h);
+  margin-bottom: var(--patients-session-toolbar-gap);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -685,8 +691,7 @@
   margin-top: 0.9rem;
 }
 
-.patients-view .patient-modal-actions .btn-primary,
-.patients-view .patient-modal-actions .btn-secondary {
+.patients-view .patient-modal-actions .pds-btn {
   flex: 1 1 0;
   width: 100%;
 }

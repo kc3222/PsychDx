@@ -131,22 +131,17 @@ export default async function PatientsPage() {
   (scores ?? []).forEach((r) => topDxBySession.set(r.session_id, r));
 
   return (
-    <div className="patients-view">
-      <div className="topbar">
+    <div className="patients-view"><div className="topbar">
         <div>
           <div className="topbar-title">Patients</div>
           <div className="topbar-sub">{patientCount} patients</div>
         </div>
         <NewPatientButton />
-      </div>
-
-      <div className="search-row">
+      </div><div className="search-row">
         <div className="search-wrap">
           <input className="search-input" placeholder="Search patients..." disabled />
         </div>
-      </div>
-
-      <div className="patient-list">
+      </div><div className="patient-list">
         {patientsList.map((p) => {
           const latest = latestSessionByPatient.get(p.id);
           const topDx = latest ? topDxBySession.get(latest.id) : undefined;
@@ -169,8 +164,7 @@ export default async function PatientsPage() {
             </Link>
           );
         })}
-      </div>
-    </div>
+      </div></div>
   );
 }
 

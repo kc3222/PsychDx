@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BlueButton } from "@/components/ui/BlueButton";
 import { createClient } from "@/lib/supabase/client";
 
 type FormState = {
@@ -82,9 +83,9 @@ export default function NewPatientButton() {
 
   return (
     <>
-      <button className="btn-primary" type="button" onClick={() => setOpen(true)}>
+      <BlueButton type="button" variant="primary" onClick={() => setOpen(true)}>
         + New patient
-      </button>
+      </BlueButton>
 
       {open ? (
         <div className="patient-modal-backdrop" role="dialog" aria-modal="true" aria-label="Create new patient">
@@ -160,12 +161,12 @@ export default function NewPatientButton() {
             </label>
 
             <div className="patient-modal-actions">
-              <button type="button" className="btn-secondary" onClick={close} disabled={saving}>
+              <BlueButton type="button" variant="secondary" onClick={close} disabled={saving}>
                 Cancel
-              </button>
-              <button type="submit" className="btn-primary" disabled={saving}>
+              </BlueButton>
+              <BlueButton type="submit" variant="primary" disabled={saving}>
                 {saving ? "Creating..." : "Create patient"}
-              </button>
+              </BlueButton>
             </div>
           </form>
         </div>
