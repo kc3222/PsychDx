@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BlueButton } from "@/components/ui/BlueButton";
 import { createClient } from "@/lib/supabase/client";
+import { useIsGuest } from "@/lib/guest/provider";
+import { addGuestPatient } from "@/lib/guest/store";
 
 type FormState = {
   firstName: string;
@@ -27,6 +29,7 @@ const INITIAL_FORM: FormState = {
 
 export default function NewPatientButton() {
   const router = useRouter();
+  const isGuest = useIsGuest();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,23 @@ export default function NewPatientButton() {
     setSaving(true);
     setError(null);
 
+    const details = {
+      first_name: form.firstName.trim(),
+      middle_name: form.middleName.trim() || null,
+      last_name: form.lastName.trim(),
+      age_range: form.ageRange.trim() || null,
+      gender: form.gender.trim() || null,
+      patient_ref_id: form.patientRefId.trim() || null,
+      initial_notes: form.initialNotes.trim() || null,
+    };
+
+    if (isGuest) {
+      addGuestPatient(details);
+      setSaving(false);
+      close();
+      return;
+    }
+
     const supabase = createClient();
     const {
       data: { user },
@@ -57,19 +77,9 @@ export default function NewPatientButton() {
       return;
     }
 
-    const payload = {
-      clinician_id: user.id,
-      first_name: form.firstName.trim(),
-      middle_name: form.middleName.trim() || null,
-      last_name: form.lastName.trim(),
-      age_range: form.ageRange.trim() || null,
-      gender: form.gender.trim() || null,
-      patient_ref_id: form.patientRefId.trim() || null,
-      initial_notes: form.initialNotes.trim() || null,
-      status: "active",
-    };
-
-    const { error: insertError } = await supabase.from("patients").insert(payload);
+    const { error: insertError } = await supabase
+      .from("patients")
+      .insert({ ...details, clinician_id: user.id, status: "active" });
     setSaving(false);
 
     if (insertError) {

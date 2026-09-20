@@ -68,16 +68,19 @@ The app is served at http://localhost:3000 and redirects to `/login`.
 ```
 app/
   layout.tsx            Root HTML shell, imports globals.css
-  page.tsx              Redirects to /home when signed in, else /login
+  page.tsx              Redirects to /home when signed in or a guest, else /login
   globals.css           Design tokens + base styles (single source of colors)
   login/, signup/       Public auth pages (share login/auth.css)
   auth/signout/         POST route handler for server-side sign-out
-  (authed)/             Route group: requires a session, renders AppShell
+  (authed)/             Route group: requires a session or guest cookie, renders AppShell
     _components/        AppShell — sidebar nav, sign-out, collapse
     home/               Diagnose workspace (client component)
     patients/           Patient list and [patientId] detail (server components)
   api/admin/users/      Admin-only user management JSON API
+  api/analyze/          Analysis endpoint for signed-in users
 components/ui/          Shared UI primitives (BlueButton)
+lib/analysis/           Rule-based scoring engine + the client-side analysis seam
+lib/guest/              Guest-mode cookie, per-tab ephemeral store, React provider
 lib/supabase/           Browser and server Supabase client factories
 lib/admin-users-api.ts  Session/service clients + role gate for the admin API
 types/profile.ts        `public.profiles` row shape and role union
@@ -92,17 +95,29 @@ Most directories carry their own `README.md` describing that route in detail.
 
 | Route | Type | Notes |
 | --- | --- | --- |
-| `/` | Server | Redirect to `/home` or `/login` |
-| `/login`, `/signup` | Client | Supabase email/password auth |
+| `/` | Server | Redirect to `/home` (session or guest) or `/login` |
+| `/login`, `/signup` | Client | Supabase email/password auth; `/login` also starts guest sessions |
 | `/home` | Client | Symptom capture, scoring, risk banner, saves a session |
 | `/patients` | Server | Patient list with latest session and top diagnosis |
 | `/patients/[patientId]` | Server | Session history, scores, symptoms for one patient |
 | `/auth/signout` | POST | Server-side `signOut()` then redirect to `/` |
 | `/api/admin/users` | GET/POST | List profiles; create Auth user + profile row |
 | `/api/admin/users/[id]` | GET/PATCH | Read or partially update one profile |
+| `/api/analyze` | POST | Differential analysis for a signed-in clinician |
 
 The sidebar also links to `/history` and `/reports`; those routes do not exist yet and
 currently 404.
+
+## Guest sessions
+
+`/login` offers **Continue as Guest**. A guest gets the full workspace — create patients,
+run analyses, browse session history — without a Supabase user and without writing a single
+row: everything lives in that tab's `sessionStorage` and the browser discards it when the
+tab closes, so there is nothing to clean up. A session cookie is all the server sees, and a
+real session always takes precedence over it.
+
+Guests run the rule-based engine in the browser instead of calling `/api/analyze`; signed-in
+users go through the route, which is where the swap to the LLM API will happen.
 
 ## Data model
 

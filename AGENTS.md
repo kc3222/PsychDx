@@ -76,6 +76,25 @@ the role check produces a clean 403, RLS is the actual boundary.
 - Pages under `app/(authed)/` are already behind the session check in
   `app/(authed)/layout.tsx`; do not re-implement redirects per page.
 
+## Guest mode
+
+`/login` has a "Continue as Guest" button. A guest exercises the whole app with no Supabase
+user and no rows in Postgres.
+
+- The server only sees a session cookie (`lib/guest/mode.ts`, read by `hasGuestCookie()`).
+  Compute guest-ness as *no user AND cookie present* — a real session always wins.
+- All guest data lives in `sessionStorage` via `lib/guest/store.ts`. Never write guest data
+  to Supabase, and never persist it anywhere that survives the tab. Rows in that store
+  mirror the DB column shapes so one view renders both paths.
+- Client components branch on `useIsGuest()` (`lib/guest/provider.tsx`), which carries the
+  server's verdict; do not sniff `document.cookie` in a component, it breaks hydration.
+- A server component that a guest can reach must not query on their behalf or redirect on an
+  empty result — return the client view with empty props and let it fill itself, the way
+  `patients/page.tsx` and `patients/[patientId]/page.tsx` do.
+- Analysis has one seam: `analyzeSymptoms()` in `lib/analysis/client.ts`. Guests run
+  `lib/analysis/rule-based.ts` in the browser; signed-in users POST to `/api/analyze`.
+  Swapping to the LLM API means changing that route handler only.
+
 ## Documentation
 
 Most directories carry a `README.md` describing that route's behavior. When you change what a

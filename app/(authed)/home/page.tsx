@@ -10,16 +10,18 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { analyzeSymptoms } from "@/lib/analysis/client";
+import {
+  computeRisk,
+  MIN_SYMPTOMS_TO_ANALYZE,
+  type AnalysisResult,
+  type AnalysisSymptom,
+  type RiskLevel,
+} from "@/lib/analysis/rule-based";
+import { useIsGuest } from "@/lib/guest/provider";
+import { saveGuestAnalysis, useGuestData } from "@/lib/guest/store";
 
-type Symptom = { text: string; onset: string; frequency: string; pattern: string; expanded: boolean };
-type RiskLevel = "low" | "moderate" | "high" | "emergency";
-type Disease = {
-  id: "mdd" | "schiz" | "bipolar";
-  name: string;
-  short: string;
-  minCriteria: number;
-  criteria: Array<{ label: string; kw: string[] }>;
-};
+type Symptom = AnalysisSymptom & { expanded: boolean };
 
 type PatientContext = {
   id: string;
@@ -44,126 +46,8 @@ const QUICK_ADD = [
   "Pressured speech",
 ];
 
-const DISEASES: Disease[] = [
-  {
-    id: "mdd",
-    name: "Major Depressive Disorder",
-    short: "MDD",
-    minCriteria: 5,
-    criteria: [
-      { label: "Depressed mood", kw: ["depressed mood", "sad", "hopeless", "low mood"] },
-      { label: "Anhedonia", kw: ["anhedonia", "loss of interest", "no pleasure"] },
-      { label: "Appetite/weight change", kw: ["appetite", "weight loss", "weight gain", "poor appetite"] },
-      { label: "Sleep disturbance", kw: ["insomnia", "sleep disturbance", "poor sleep"] },
-      { label: "Fatigue/low energy", kw: ["fatigue", "tired", "no energy", "exhausted"] },
-      { label: "Worthlessness/guilt", kw: ["worthless", "guilt", "shame", "self-blame"] },
-      { label: "Trouble concentrating", kw: ["concentration", "cannot think", "brain fog"] },
-      { label: "Psychomotor changes", kw: ["psychomotor", "agitated", "slowed down"] },
-      { label: "Thoughts of death/suicide", kw: ["suicidal", "suicide", "wants to die", "self-harm"] },
-    ],
-  },
-  {
-    id: "bipolar",
-    name: "Bipolar I",
-    short: "Bipolar I",
-    minCriteria: 3,
-    criteria: [
-      { label: "Elevated/irritable mood", kw: ["mania", "manic", "euphoric", "irritable"] },
-      { label: "Grandiosity", kw: ["grandiose", "grandiosity", "overconfident"] },
-      { label: "Decreased need for sleep", kw: ["decreased sleep", "no sleep", "not slept"] },
-      { label: "Pressured speech", kw: ["pressured speech", "rapid speech", "talking too much"] },
-      { label: "Racing thoughts", kw: ["racing thoughts", "flight of ideas"] },
-      { label: "Impulsive/risky behavior", kw: ["reckless", "risky behavior", "spending spree", "impulsive"] },
-      { label: "Alternating depressive episodes", kw: ["depressed", "hopeless", "anhedonia"] },
-    ],
-  },
-  {
-    id: "schiz",
-    name: "Schizophrenia",
-    short: "SCZ",
-    minCriteria: 2,
-    criteria: [
-      { label: "Delusions", kw: ["delusion", "delusional", "paranoid"] },
-      { label: "Hallucinations", kw: ["hallucination", "hearing voices", "voices"] },
-      { label: "Disorganized speech", kw: ["disorganized speech", "incoherent", "word salad"] },
-      { label: "Disorganized/catatonic behavior", kw: ["catatonic", "bizarre behavior", "disorganized behavior"] },
-      { label: "Negative symptoms", kw: ["flat affect", "social withdrawal", "avolition", "alogia"] },
-    ],
-  },
-];
-
-const RISK_TRIGGERS: Record<Exclude<RiskLevel, "low">, string[]> = {
-  emergency: [
-    "suicidal ideation",
-    "suicidal",
-    "suicide",
-    "wants to die",
-    "self harm",
-    "self-harm",
-    "command hallucination",
-    "voices telling me to",
-    "homicidal",
-  ],
-  high: [
-    "delusion",
-    "hallucination",
-    "hearing voices",
-    "psychosis",
-    "hopeless",
-    "bizarre behavior",
-    "no sleep for days",
-    "spending all money",
-  ],
-  moderate: [
-    "social withdrawal",
-    "insomnia",
-    "sleep disturbance",
-    "anhedonia",
-    "fatigue",
-    "poor concentration",
-    "flat affect",
-    "manic",
-  ],
-};
-
 function displaySymptomLabel(text: string) {
   return text.replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function scoreDisease(disease: Disease, syms: Symptom[]) {
-  const texts = syms.map((s) => s.text);
-  const matched: string[] = [];
-  const unmatched: string[] = [];
-  let durationBonus = 0;
-
-  syms.forEach((s) => {
-    if (["6m", "1y", "1y+"].includes(s.onset)) durationBonus = Math.max(durationBonus, 0.08);
-    else if (s.onset === "3m") durationBonus = Math.max(durationBonus, 0.04);
-    else if (s.onset === "1m") durationBonus = Math.max(durationBonus, 0.02);
-  });
-
-  disease.criteria.forEach((c) => {
-    const hit = c.kw.some((kw) => texts.some((t) => t.includes(kw) || kw.includes(t.split(" ")[0] ?? "")));
-    if (hit) matched.push(c.label);
-    else unmatched.push(c.label);
-  });
-
-  const raw = matched.length / disease.criteria.length;
-  const bonus = matched.length >= disease.minCriteria ? 0.15 : 0;
-  const penalty = syms.length < 4 ? -0.05 : 0;
-  const score = Math.min(0.97, Math.max(0.03, raw + bonus + penalty + durationBonus));
-  return { matched, unmatched, score, pct: 0 };
-}
-
-function computeRisk(syms: Symptom[]) {
-  const text = syms.map((s) => s.text).join(" ").toLowerCase();
-  const e = RISK_TRIGGERS.emergency.filter((k) => text.includes(k));
-  const h = RISK_TRIGGERS.high.filter((k) => text.includes(k));
-  const m = RISK_TRIGGERS.moderate.filter((k) => text.includes(k));
-  if (e.length) return { level: "emergency" as RiskLevel, triggers: e.slice(0, 4) };
-  if (h.length) return { level: "high" as RiskLevel, triggers: h.slice(0, 4) };
-  if (m.length) return { level: "moderate" as RiskLevel, triggers: m.slice(0, 4) };
-  return { level: "low" as RiskLevel, triggers: [] };
 }
 
 function riskFollowupCopy(level: RiskLevel) {
@@ -177,32 +61,44 @@ export default function DiagnosePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("patientId");
+  const isGuest = useIsGuest();
+  const guest = useGuestData();
 
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [input, setInput] = useState("");
-  const [results, setResults] = useState<
-    Array<{ disease: Disease; matched: string[]; unmatched: string[]; score: number; pct: number }>
-  >([]);
-  const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
-  const [clinicianPatients, setClinicianPatients] = useState<PatientContext[]>([]);
-  const [patientsListReady, setPatientsListReady] = useState(false);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [remotePatients, setRemotePatients] = useState<PatientContext[]>([]);
+  const [remotePatientsReady, setRemotePatientsReady] = useState(false);
+  const [remotePatientContext, setRemotePatientContext] = useState<PatientContext | null>(null);
   const [patientMenuOpen, setPatientMenuOpen] = useState(false);
   const [savingAnalysis, setSavingAnalysis] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [openDxId, setOpenDxId] = useState<string | null>(null);
   const addPatientWrapRef = useRef<HTMLDivElement>(null);
 
-  const canAnalyze = symptoms.length >= 2;
-  const analyzed = results.length > 0;
+  const canAnalyze = symptoms.length >= MIN_SYMPTOMS_TO_ANALYZE;
+  const analyzed = analysis !== null;
+  const results = analysis?.candidates ?? [];
+  const top = results[0];
+
+  const clinicianPatients = isGuest ? guest.patients : remotePatients;
+  const patientsListReady = isGuest ? true : remotePatientsReady;
   const hasClinicianPatients = clinicianPatients.length > 0;
+  const patientContext = isGuest
+    ? guest.patients.find((p) => p.id === patientId) ?? null
+    : remotePatientContext;
 
   useEffect(() => {
     if (!analyzed) setPatientMenuOpen(false);
   }, [analyzed]);
-  const risk = useMemo(() => computeRisk(symptoms), [symptoms]);
-  const top = results[0];
+
+  // Live triage hint for the overview card: it tracks what is typed, while the risk panel
+  // below shows the risk the last analysis returned.
+  const liveRisk = useMemo(() => computeRisk(symptoms), [symptoms]);
 
   useEffect(() => {
+    if (isGuest) return;
     const supabase = createClient();
     let cancelled = false;
     supabase
@@ -213,21 +109,22 @@ export default function DiagnosePage() {
       .returns<PatientContext[]>()
       .then(({ data, error }) => {
         if (cancelled) return;
-        setPatientsListReady(true);
+        setRemotePatientsReady(true);
         if (error) {
-          setClinicianPatients([]);
+          setRemotePatients([]);
           return;
         }
-        setClinicianPatients(data ?? []);
+        setRemotePatients(data ?? []);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isGuest]);
 
   useEffect(() => {
+    if (isGuest) return;
     if (!patientId) {
-      setPatientContext(null);
+      setRemotePatientContext(null);
       return;
     }
     const supabase = createClient();
@@ -236,8 +133,8 @@ export default function DiagnosePage() {
       .select("id, first_name, last_name")
       .eq("id", patientId)
       .maybeSingle<PatientContext>()
-      .then(({ data }) => setPatientContext(data ?? null));
-  }, [patientId]);
+      .then(({ data }) => setRemotePatientContext(data ?? null));
+  }, [isGuest, patientId]);
 
   useEffect(() => {
     if (!patientMenuOpen) return;
@@ -267,24 +164,42 @@ export default function DiagnosePage() {
     setInput("");
   };
 
-  const analyze = () => {
-    if (!canAnalyze) return;
-    const scored = DISEASES.map((d) => ({ disease: d, ...scoreDisease(d, symptoms) }));
-    const total = scored.reduce((s, r) => s + r.score, 0);
-    scored.forEach((r) => {
-      r.pct = Math.round((r.score / total) * 100);
-    });
-    scored.sort((a, b) => b.pct - a.pct);
-    setResults(scored);
-    setSaveMessage(null);
-    setOpenDxId(scored[0]?.disease.id ?? null);
+  const analyze = async () => {
+    if (!canAnalyze || analyzing) return;
+    setAnalyzing(true);
+    setNotice(null);
+    try {
+      const result = await analyzeSymptoms(
+        symptoms.map(({ text, onset, frequency, pattern }) => ({ text, onset, frequency, pattern })),
+        { guest: isGuest }
+      );
+      setAnalysis(result);
+      setOpenDxId(result.candidates[0]?.id ?? null);
+    } catch (err) {
+      setAnalysis(null);
+      setNotice(err instanceof Error ? err.message : "Analysis failed.");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const saveAnalysisToPatient = async (targetPatientId: string) => {
-    if (!analyzed || !targetPatientId || savingAnalysis) return;
+    if (!analysis || !targetPatientId || savingAnalysis) return;
     setSavingAnalysis(true);
-    setSaveMessage(null);
+    setNotice(null);
     setPatientMenuOpen(false);
+
+    if (isGuest) {
+      saveGuestAnalysis({
+        patientId: targetPatientId,
+        candidates: analysis.candidates,
+        symptoms: symptoms.map((s) => s.text),
+      });
+      setSavingAnalysis(false);
+      router.push(`/patients/${targetPatientId}`);
+      return;
+    }
+
     const supabase = createClient();
 
     const { data: latestSession, error: latestError } = await supabase
@@ -297,7 +212,7 @@ export default function DiagnosePage() {
 
     if (latestError) {
       setSavingAnalysis(false);
-      setSaveMessage(latestError.message);
+      setNotice(latestError.message);
       return;
     }
 
@@ -317,15 +232,15 @@ export default function DiagnosePage() {
 
     if (sessionError || !insertedSession) {
       setSavingAnalysis(false);
-      setSaveMessage(sessionError?.message ?? "Could not create session.");
+      setNotice(sessionError?.message ?? "Could not create session.");
       return;
     }
 
     const sessionId = insertedSession.id;
-    const scoreRows = results.map((r, idx) => ({
+    const scoreRows = analysis.candidates.map((c, idx) => ({
       session_id: sessionId,
-      diagnosis: r.disease.name,
-      confidence_pct: r.pct,
+      diagnosis: c.name,
+      confidence_pct: c.pct,
       rank: idx + 1,
     }));
     const symptomRows = symptoms.map((s) => ({
@@ -340,7 +255,7 @@ export default function DiagnosePage() {
 
     setSavingAnalysis(false);
     if (scoreError || symptomError) {
-      setSaveMessage(scoreError?.message ?? symptomError?.message ?? "Failed to save analysis details.");
+      setNotice(scoreError?.message ?? symptomError?.message ?? "Failed to save analysis details.");
       return;
     }
 
@@ -383,11 +298,11 @@ export default function DiagnosePage() {
               </div>
               <div className="analysis-stat-card">
                 <span>Risk</span>
-                <strong className={`risk-${risk.level}`}>{risk.level}</strong>
+                <strong className={`risk-${liveRisk.level}`}>{liveRisk.level}</strong>
               </div>
               <div className="analysis-stat-card">
                 <span>Top match</span>
-                <strong>{analyzed && top ? top.disease.short : "—"}</strong>
+                <strong>{analyzed && top ? top.short : "—"}</strong>
               </div>
             </div>
 
@@ -432,7 +347,7 @@ export default function DiagnosePage() {
                 {symptoms.length === 0 ? (
                   <div className="analysis-empty-hint">
                     <FileText size={40} strokeWidth={1.25} />
-                    <p>Add at least 2 symptoms to get started.</p>
+                    <p>Add at least {MIN_SYMPTOMS_TO_ANALYZE} symptoms to get started.</p>
                   </div>
                 ) : (
                   symptoms.map((s, idx) => (
@@ -513,8 +428,8 @@ export default function DiagnosePage() {
             </div>
           </div>
 
-          <button className="analysis-reanalyze" type="button" onClick={analyze} disabled={!canAnalyze}>
-            {analyzed ? "Re-analyze" : "Analyze"}
+          <button className="analysis-reanalyze" type="button" onClick={analyze} disabled={!canAnalyze || analyzing}>
+            {analyzing ? "Analyzing…" : analyzed ? "Re-analyze" : "Analyze"}
           </button>
         </div>
 
@@ -525,6 +440,12 @@ export default function DiagnosePage() {
             <h2 className="analysis-section-label" style={{ marginBottom: 0 }}>
               Results
             </h2>
+            {analysis ? (
+              <span className="analysis-engine-tag">
+                {analysis.engine === "rule-based" ? "Rule-based" : "LLM"}
+                {isGuest ? " · guest" : ""}
+              </span>
+            ) : null}
             {patientsListReady && hasClinicianPatients && analyzed ? (
               <div className="analysis-add-patient-wrap" ref={addPatientWrapRef}>
                 <button
@@ -561,7 +482,7 @@ export default function DiagnosePage() {
           </div>
 
           <div className="analysis-results-scroll">
-            {!analyzed ? (
+            {!analysis ? (
               <div className="analysis-empty-results">
                 <FileSearch size={48} strokeWidth={1.15} />
                 <p>Add symptoms on the left, then press Analyze.</p>
@@ -572,7 +493,7 @@ export default function DiagnosePage() {
                   <div className="analysis-assessment-card">
                     <p className="analysis-inner-label">Assessment</p>
                     <p>
-                      Most closely matches <strong>{top.disease.name}.</strong>
+                      Most closely matches <strong>{top.name}.</strong>
                     </p>
                     <span className={`analysis-confidence-badge ${confidenceClass}`.trim()}>
                       {top.pct > 60 ? "High confidence" : top.pct > 40 ? "Moderate confidence" : "Low confidence"}
@@ -580,12 +501,12 @@ export default function DiagnosePage() {
                   </div>
                 ) : null}
 
-                <div className={`analysis-risk-panel risk-${risk.level}`}>
-                  <strong>{risk.level} risk</strong>
-                  <span>{riskFollowupCopy(risk.level)}</span>
-                  {risk.triggers.length ? (
+                <div className={`analysis-risk-panel risk-${analysis.risk.level}`}>
+                  <strong>{analysis.risk.level} risk</strong>
+                  <span>{riskFollowupCopy(analysis.risk.level)}</span>
+                  {analysis.risk.triggers.length ? (
                     <div className="analysis-risk-chips">
-                      {risk.triggers.map((t) => (
+                      {analysis.risk.triggers.map((t) => (
                         <span key={t}>{t}</span>
                       ))}
                     </div>
@@ -595,17 +516,17 @@ export default function DiagnosePage() {
                 <h2 className="analysis-section-label">Diagnosis</h2>
                 <div className="analysis-dx-list">
                   {results.map((r) => {
-                    const isTop = top?.disease.id === r.disease.id;
-                    const open = openDxId === r.disease.id;
+                    const isTop = top?.id === r.id;
+                    const open = openDxId === r.id;
                     return (
-                      <div key={r.disease.id} className={`analysis-dx-row ${isTop ? "is-top" : ""}`.trim()}>
+                      <div key={r.id} className={`analysis-dx-row ${isTop ? "is-top" : ""}`.trim()}>
                         <button
                           type="button"
                           className="analysis-dx-row-head"
-                          onClick={() => setOpenDxId(open ? null : r.disease.id)}
+                          onClick={() => setOpenDxId(open ? null : r.id)}
                           aria-expanded={open}
                         >
-                          <span className="analysis-dx-name">{r.disease.name}</span>
+                          <span className="analysis-dx-name">{r.name}</span>
                           <span className="analysis-dx-pct">{r.pct}%</span>
                           <ChevronDown size={16} className={`analysis-dx-chevron ${open ? "open" : ""}`} aria-hidden />
                         </button>
@@ -615,8 +536,8 @@ export default function DiagnosePage() {
                               <span style={{ width: `${r.pct}%` }} />
                             </div>
                             <p style={{ margin: "0 0 0.35rem" }}>
-                              DSM-5 criteria met: {r.matched.length}/{r.disease.criteria.length}
-                              {r.matched.length < r.disease.minCriteria ? (
+                              DSM-5 criteria met: {r.matched.length}/{r.criteriaCount}
+                              {r.matched.length < r.minCriteria ? (
                                 <span className="minimum-badge" style={{ marginLeft: 6 }}>
                                   Below minimum
                                 </span>
@@ -644,9 +565,9 @@ export default function DiagnosePage() {
             )}
           </div>
 
-          {saveMessage ? (
+          {notice ? (
             <p className="message error analysis-save-error" role="alert">
-              {saveMessage}
+              {notice}
             </p>
           ) : null}
         </div>

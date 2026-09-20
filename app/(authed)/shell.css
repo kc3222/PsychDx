@@ -97,6 +97,32 @@
   white-space: nowrap;
 }
 
+/* --- Sidebar: guest session markers --- */
+.sidebar-guest-pill {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-strong);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.sidebar-guest-note {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
 /* --- Sidebar: nav group --- */
 .sidebar-nav {
   display: flex;
@@ -233,6 +259,15 @@
 .ccc-shell.sidebar-collapsed .sidebar-section-label {
   height: 0;
   margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ccc-shell.sidebar-collapsed .sidebar-guest-note {
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
   opacity: 0;
   pointer-events: none;
 }

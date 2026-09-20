@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { hasGuestCookie } from "@/lib/guest/server";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -7,7 +8,7 @@ export default async function Page() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) {
+  if (user || (await hasGuestCookie())) {
     redirect("/home");
   }
   redirect("/login");

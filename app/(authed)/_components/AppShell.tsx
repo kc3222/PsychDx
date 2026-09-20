@@ -4,6 +4,8 @@ import { ReactNode, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { exitGuestMode } from "@/lib/guest/mode";
+import { clearGuestData } from "@/lib/guest/store";
 import {
   BrainCircuit,
   ClipboardList,
@@ -35,7 +37,13 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(`${href}/`);
 }
 
-export default function AppShell({ children }: { children: ReactNode }) {
+export default function AppShell({
+  children,
+  isGuest = false,
+}: {
+  children: ReactNode;
+  isGuest?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -49,8 +57,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const signOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    if (isGuest) {
+      // Leaving guest mode is the same as closing the tab: the workspace is dropped.
+      clearGuestData();
+      exitGuestMode();
+    } else {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    }
     router.push("/login");
     router.refresh();
   };
@@ -64,8 +78,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <BrainCircuit size={18} />
             </span>
             <span className="sidebar-wordmark">
-              <span className="sidebar-title">PsychDx</span>
-              <span className="sidebar-tagline">Clinical support</span>
+              <span className="sidebar-title">
+                PsychDx
+                {isGuest ? <span className="sidebar-guest-pill">Guest</span> : null}
+              </span>
+              <span className="sidebar-tagline">{isGuest ? "Guest session" : "Clinical support"}</span>
             </span>
           </div>
 
@@ -92,17 +109,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="sidebar-footer">
+            {isGuest ? (
+              <p className="sidebar-guest-note">
+                Nothing is saved. This workspace clears when you close the tab.
+              </p>
+            ) : null}
             <button
               type="button"
               className="ccc-navlink signout-btn"
               onClick={signOut}
               disabled={signingOut}
-              title="Sign out"
+              title={isGuest ? "Exit guest mode" : "Sign out"}
             >
               <span className="navlink-icon" aria-hidden="true">
                 <LogOut size={18} />
               </span>
-              <span className="nav-label">{signingOut ? "Signing out…" : "Sign out"}</span>
+              <span className="nav-label">
+                {signingOut ? "Leaving…" : isGuest ? "Exit guest" : "Sign out"}
+              </span>
             </button>
 
             <button
