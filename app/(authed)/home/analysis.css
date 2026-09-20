@@ -456,6 +456,18 @@
   margin-bottom: 0.65rem;
 }
 
+.analysis-engine-tag {
+  margin-right: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .analysis-add-patient-wrap {
   position: relative;
   flex-shrink: 0;

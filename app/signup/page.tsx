@@ -1,6 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { exitGuestMode } from "@/lib/guest/mode";
+import { clearGuestData } from "@/lib/guest/store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -37,6 +39,8 @@ export default function SignupPage() {
       return;
     }
     if (data.session) {
+      clearGuestData();
+      exitGuestMode();
       router.push("/home");
       router.refresh();
       return;

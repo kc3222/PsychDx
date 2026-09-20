@@ -1,6 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { enterGuestMode, exitGuestMode } from "@/lib/guest/mode";
+import { clearGuestData } from "@/lib/guest/store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -26,6 +28,16 @@ export default function LoginPage() {
       setError(signInError.message);
       return;
     }
+    // A leftover guest workspace must not follow the user into their real account.
+    clearGuestData();
+    exitGuestMode();
+    router.push("/home");
+    router.refresh();
+  }
+
+  function continueAsGuest() {
+    clearGuestData();
+    enterGuestMode();
     router.push("/home");
     router.refresh();
   }
@@ -64,6 +76,18 @@ export default function LoginPage() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" className="auth-guest-btn" onClick={continueAsGuest} disabled={loading}>
+          Continue as Guest
+        </button>
+        <p className="auth-guest-note">
+          Try the full workspace with sample data of your own. Nothing is saved — the guest
+          workspace is wiped when you close the tab.
+        </p>
+
         <p className="footer-link">
           No account? <Link href="/signup">Sign up</Link>
         </p>
