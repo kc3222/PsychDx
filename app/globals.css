@@ -1,31 +1,131 @@
 /* =============================================================================
    globals.css
-   1. Design tokens (colors, typography, shape)
-   2. Base & document (reset, box model, page chrome)
+   1. Design tokens (color ramps, semantic aliases, typography, shape, elevation)
+   2. Base & document (reset, box model, page chrome, focus)
    3. Route CSS: (authed)/shell.css, home/{analysis,diagnose}.css, patients/patients.css, login/auth.css
    ============================================================================= */
 
-/* --- Design tokens: color scheme --- */
+/* --- Design tokens: brand ramp (deep clinical blue) --- */
 :root {
-  --bg: #edf4ff;
-  --surface: #ffffff;
-  --border: #bfd3f3;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --block-bg: #f7fbff;
-  --danger: #f87171;
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+  --brand-950: #172554;
+}
+
+/* --- Design tokens: neutral ramp (cool slate) --- */
+:root {
+  --n-0: #ffffff;
+  --n-50: #f8fafc;
+  --n-100: #f1f5f9;
+  --n-200: #e2e8f0;
+  --n-300: #cbd5e1;
+  --n-400: #94a3b8;
+  --n-500: #64748b;
+  --n-600: #475569;
+  --n-700: #334155;
+  --n-800: #1e293b;
+  --n-900: #0f172a;
+}
+
+/* --- Design tokens: status ramps --- */
+:root {
+  --ok-50: #f0fdf4;
+  --ok-200: #bbf7d0;
+  --ok-600: #16a34a;
+  --ok-700: #15803d;
+  --ok-900: #14532d;
+
+  --warn-50: #fffbeb;
+  --warn-100: #fef3c7;
+  --warn-200: #fde68a;
+  --warn-600: #d97706;
+  --warn-700: #b45309;
+  --warn-900: #78350f;
+
+  --danger-50: #fef2f2;
+  --danger-200: #fecaca;
+  --danger-300: #fca5a5;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+  --danger-900: #7f1d1d;
+}
+
+/* --- Design tokens: semantic aliases --- */
+:root {
+  /* Surfaces */
+  --bg: #eef2f9;
+  --surface: var(--n-0);
+  --surface-sunken: var(--n-50);
+  --surface-raised: var(--n-0);
+  --block-bg: var(--n-50);
+  --field-bg: var(--n-50);
+
+  /* Lines */
+  --border: var(--n-200);
+  --border-strong: var(--n-300);
+  --hairline: rgba(15, 23, 42, 0.08);
+  --overlay: rgba(15, 23, 42, 0.32);
+
+  /* Text */
+  --text: var(--n-900);
+  --text-2: var(--n-700);
+  --text-3: var(--n-600);
+  --muted: var(--n-500);
+  --faint: var(--n-400);
+  --on-accent: var(--n-0);
+
+  /* Interactive */
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-700);
+  --accent-soft: var(--brand-50);
+  --accent-soft-border: var(--brand-200);
+  --accent-text: var(--brand-700);
+  --ring: rgba(37, 99, 235, 0.3);
+
+  /* Sidebar (dark navy chrome) */
+  --sidebar-bg: #111c3d;
+  --sidebar-bg-2: #0b1430;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #aebbd8;
+  --sidebar-text-strong: #ffffff;
+  --sidebar-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-active: var(--brand-600);
+  --sidebar-glow: rgba(37, 99, 235, 0.4);
+  --sidebar-danger-hover: rgba(239, 68, 68, 0.15);
+
+  /* Status */
+  --danger: var(--danger-600);
+  --success: var(--ok-700);
+  --warning: var(--warn-700);
 }
 
 /* --- Design tokens: typography --- */
 :root {
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 /* --- Design tokens: radius / shape --- */
 :root {
+  --radius-sm: 8px;
   --radius: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+}
+
+/* --- Design tokens: elevation --- */
+:root {
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 14px 34px rgba(15, 23, 42, 0.14);
 }
 
 /* --- Base: box model --- */
@@ -47,6 +147,7 @@ body {
 body {
   font-family: var(--font);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* --- Base: default colors on the document --- */
@@ -65,9 +166,21 @@ a:hover {
   text-decoration: underline;
 }
 
+/* --- Base: keyboard focus --- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* --- Base: main landmark --- */
 main {
   min-height: 100vh;
+}
+
+/* --- Base: scrollbars in scroll panes --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-300) transparent;
 }
 
 /* --- Inline / form messages (login, signup, patients, home) --- */
@@ -75,18 +188,17 @@ main {
   font-size: 0.875rem;
   margin: 0 0 1rem;
   padding: 0.65rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .message.error {
-  background: rgba(248, 113, 113, 0.12);
-  color: var(--danger);
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-200);
 }
 
 .message.success {
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: var(--ok-50);
+  color: var(--ok-700);
+  border: 1px solid var(--ok-200);
 }
-

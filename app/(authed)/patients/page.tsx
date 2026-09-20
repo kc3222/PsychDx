@@ -133,7 +133,7 @@ export default async function PatientsPage() {
   return (
     <div className="patients-view"><div className="topbar">
         <div>
-          <div className="topbar-title">Patients</div>
+          <h1 className="topbar-title">Patients</h1>
           <div className="topbar-sub">{patientCount} patients</div>
         </div>
         <NewPatientButton />

@@ -622,13 +622,13 @@ export default function DiagnosePage() {
                                 </span>
                               ) : null}
                             </p>
-                            <strong style={{ color: "#475569" }}>Confirmed criteria</strong>
+                            <strong style={{ color: "var(--text-3)" }}>Confirmed criteria</strong>
                             <ul>
                               {r.matched.map((m) => (
                                 <li key={m}>{m}</li>
                               ))}
                             </ul>
-                            <strong style={{ color: "#475569" }}>Missing to confirm</strong>
+                            <strong style={{ color: "var(--text-3)" }}>Missing to confirm</strong>
                             <ul>
                               {r.unmatched.slice(0, 4).map((m) => (
                                 <li key={m}>{m}</li>
