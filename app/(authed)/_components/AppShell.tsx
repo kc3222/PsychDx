@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
+  BrainCircuit,
   ClipboardList,
   FileText,
   History,
@@ -58,51 +59,65 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <main className="ccc-main">
       <div className={`ccc-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         <aside className="ccc-sidebar">
-          <div className="ccc-sidebar-top">
-            <h1 className="sidebar-title">PsychDx</h1>
-            <button
-              type="button"
-              className="sidebar-toggle"
-              onClick={() => setSidebarCollapsed((prev) => !prev)}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <span className="icon-collapsed">
-                <PanelLeftOpen size={20} />
-              </span>
-              <span className="icon-expanded">
-                <PanelLeftClose size={20} />
-              </span>
-            </button>
+          <div className="sidebar-brand">
+            <span className="sidebar-mark" aria-hidden="true">
+              <BrainCircuit size={18} />
+            </span>
+            <span className="sidebar-wordmark">
+              <span className="sidebar-title">PsychDx</span>
+              <span className="sidebar-tagline">Clinical support</span>
+            </span>
           </div>
 
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = item.key === activeKey;
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={`ccc-navlink ${active ? "active" : ""}`}
-                aria-label={item.label}
-                title={item.label}
-              >
-                <Icon size={20} />
-                <span className="nav-label">{item.label}</span>
-              </Link>
-            );
-          })}
+          <nav className="sidebar-nav" aria-label="Primary">
+            <p className="sidebar-section-label">Workspace</p>
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = item.key === activeKey;
+              return (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className={`ccc-navlink ${active ? "active" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  title={item.label}
+                >
+                  <span className="navlink-icon" aria-hidden="true">
+                    <Icon size={18} />
+                  </span>
+                  <span className="nav-label">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-          <button
-            type="button"
-            className="signout-btn"
-            onClick={signOut}
-            disabled={signingOut}
-            aria-label="Sign out"
-            title="Sign out"
-          >
-            <LogOut size={20} />
-            <span className="nav-label">{signingOut ? "Signing out..." : "Sign out"}</span>
-          </button>
+          <div className="sidebar-footer">
+            <button
+              type="button"
+              className="ccc-navlink signout-btn"
+              onClick={signOut}
+              disabled={signingOut}
+              title="Sign out"
+            >
+              <span className="navlink-icon" aria-hidden="true">
+                <LogOut size={18} />
+              </span>
+              <span className="nav-label">{signingOut ? "Signing out…" : "Sign out"}</span>
+            </button>
+
+            <button
+              type="button"
+              className="ccc-navlink sidebar-toggle"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="navlink-icon" aria-hidden="true">
+                {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+              </span>
+              <span className="nav-label">Collapse</span>
+            </button>
+          </div>
         </aside>
 
         <section className="ccc-content">{children}</section>
@@ -110,4 +125,3 @@ export default function AppShell({ children }: { children: ReactNode }) {
     </main>
   );
 }
-

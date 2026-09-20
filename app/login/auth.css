@@ -15,7 +15,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: 0 14px 40px rgba(30, 64, 175, 0.14);
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-main .card h1 {
@@ -44,7 +44,7 @@
   margin-bottom: 1rem;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--field-bg);
   color: var(--text);
   font-size: 1rem;
 }
@@ -52,7 +52,7 @@
 .auth-main input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .auth-main button[type="submit"] {
@@ -62,7 +62,7 @@
   border: none;
   border-radius: 8px;
   background: var(--accent);
-  color: white;
+  color: var(--on-accent);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

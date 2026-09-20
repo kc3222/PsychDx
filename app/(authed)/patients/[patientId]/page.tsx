@@ -195,9 +195,9 @@ export default async function PatientDetailPage({
           {initials(patient.first_name, patient.last_name)}
         </div>
         <div>
-          <div className="detail-title">
+          <h1 className="detail-title">
             {patient.first_name} {patient.last_name}
-          </div>
+          </h1>
           <div className="detail-sub">{formatAgeGender(patient)}</div>
         </div>
         <div className="detail-actions">
