@@ -11,6 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { analyzeSymptoms } from "@/lib/analysis/client";
+import { todayLocalDate } from "@/lib/date";
 import {
   computeRisk,
   MIN_SYMPTOMS_TO_ANALYZE,
@@ -225,6 +226,9 @@ export default function DiagnosePage() {
         patient_id: targetPatientId,
         version: nextVersion,
         session_type: sessionType,
+        // Sent explicitly rather than left to the column's `default current_date`, which
+        // the database evaluates in UTC and so dates evening sessions to tomorrow.
+        session_date: todayLocalDate(),
         status: "active",
       })
       .select("id")
