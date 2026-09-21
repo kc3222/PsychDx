@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import NewPatientButton from "./NewPatientButton";
+import { formatDate } from "./format";
 
 type PatientRow = {
   id: string;
@@ -37,13 +38,6 @@ function formatAgeGender(p: PatientRow) {
   const gender = p.gender?.trim();
   if (age && gender) return `${age} · ${gender}`;
   return age || gender || "";
-}
-
-function formatDate(d: string | null | undefined) {
-  if (!d) return "";
-  const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return "";
-  return dt.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function diagnosisShort(d: string) {
