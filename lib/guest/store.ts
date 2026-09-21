@@ -15,6 +15,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { AnalysisCandidate } from "@/lib/analysis/rule-based";
+import { todayLocalDate } from "@/lib/date";
 
 export type GuestPatientRow = {
   id: string;
@@ -100,10 +101,6 @@ function newId() {
   return `guest-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function useGuestData(): GuestData {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
@@ -148,7 +145,7 @@ export function saveGuestAnalysis({
     patient_id: patientId,
     version,
     session_type: version === 1 ? "initial_assessment" : "follow_up_evaluation",
-    session_date: today(),
+    session_date: todayLocalDate(),
     status: "active",
     created_at: new Date().toISOString(),
   };

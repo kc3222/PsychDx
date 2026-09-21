@@ -48,9 +48,24 @@ export function formatAgeGender(p: { age_range: string | null; gender: string | 
   return age || gender || "";
 }
 
+const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+// sessions.session_date is a Postgres `date`, so it arrives as a bare "YYYY-MM-DD"
+// (the guest store writes the same shape). `new Date()` parses that as UTC midnight,
+// which renders as the previous day for anyone behind UTC, so build those at local
+// midnight instead. Full ISO timestamps (created_at) keep the default parsing.
 export function formatDate(d: string | null | undefined) {
   if (!d) return "";
-  const dt = new Date(d);
+  const parts = DATE_ONLY_RE.exec(d);
+  let dt: Date;
+  if (parts) {
+    const [, year, month, day] = parts.map(Number);
+    dt = new Date(year, month - 1, day);
+    dt.setFullYear(year);
+    if (dt.getMonth() !== month - 1 || dt.getDate() !== day) return "";
+  } else {
+    dt = new Date(d);
+  }
   if (Number.isNaN(dt.getTime())) return "";
   return dt.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
