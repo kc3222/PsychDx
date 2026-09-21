@@ -2,7 +2,8 @@
    globals.css
    1. Design tokens (color ramps, semantic aliases, typography, shape, elevation)
    2. Base & document (reset, box model, page chrome, focus)
-   3. Route CSS: (authed)/shell.css, home/{analysis,diagnose}.css, patients/patients.css, login/auth.css
+   3. Route CSS: (authed)/shell.css, (authed)/_components/placeholder.css,
+      home/{analysis,diagnose}.css, patients/patients.css, login/auth.css
    ============================================================================= */
 
 /* --- Design tokens: brand ramp (deep clinical blue) --- */
