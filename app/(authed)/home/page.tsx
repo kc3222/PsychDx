@@ -12,15 +12,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { analyzeSymptoms } from "@/lib/analysis/client";
 import { todayLocalDate } from "@/lib/date";
+import { ragView, type AnalysisResult } from "@/lib/analysis/result";
 import {
   computeRisk,
   MIN_SYMPTOMS_TO_ANALYZE,
-  type AnalysisResult,
   type AnalysisSymptom,
   type RiskLevel,
 } from "@/lib/analysis/rule-based";
 import { useIsGuest } from "@/lib/guest/provider";
 import { saveGuestAnalysis, useGuestData } from "@/lib/guest/store";
+import { LIKELIHOOD_CLASS, ragRowId, RagResults } from "./RagResults";
 
 type Symptom = AnalysisSymptom & { expanded: boolean };
 
@@ -80,8 +81,13 @@ export default function DiagnosePage() {
 
   const canAnalyze = symptoms.length >= MIN_SYMPTOMS_TO_ANALYZE;
   const analyzed = analysis !== null;
-  const results = analysis?.candidates ?? [];
+  const results = analysis?.engine === "rule-based" ? analysis.candidates : [];
   const top = results[0];
+  const ragResultView = analysis?.engine === "rag" ? ragView(analysis) : null;
+  const ragDiagnoses = ragResultView?.kind === "cards" ? ragResultView.items : [];
+  const topMatchLabel = top?.short ?? ragDiagnoses[0]?.name ?? "—";
+  // Only a result with ranked candidates can become a patient session.
+  const canSave = results.length > 0 || ragDiagnoses.length > 0;
 
   const clinicianPatients = isGuest ? guest.patients : remotePatients;
   const patientsListReady = isGuest ? true : remotePatientsReady;
@@ -175,7 +181,7 @@ export default function DiagnosePage() {
         { guest: isGuest }
       );
       setAnalysis(result);
-      setOpenDxId(result.candidates[0]?.id ?? null);
+      setOpenDxId(result.engine === "rule-based" ? result.candidates[0]?.id ?? null : ragRowId(0));
     } catch (err) {
       setAnalysis(null);
       setNotice(err instanceof Error ? err.message : "Analysis failed.");
@@ -185,12 +191,13 @@ export default function DiagnosePage() {
   };
 
   const saveAnalysisToPatient = async (targetPatientId: string) => {
-    if (!analysis || !targetPatientId || savingAnalysis) return;
+    if (!analysis || !canSave || !targetPatientId || savingAnalysis) return;
     setSavingAnalysis(true);
     setNotice(null);
     setPatientMenuOpen(false);
 
-    if (isGuest) {
+    // Guests always run the rule-based engine, so their results always carry candidates.
+    if (isGuest && analysis.engine === "rule-based") {
       saveGuestAnalysis({
         patientId: targetPatientId,
         candidates: analysis.candidates,
@@ -241,12 +248,14 @@ export default function DiagnosePage() {
     }
 
     const sessionId = insertedSession.id;
-    const scoreRows = analysis.candidates.map((c, idx) => ({
-      session_id: sessionId,
-      diagnosis: c.name,
-      confidence_pct: c.pct,
-      rank: idx + 1,
-    }));
+    const scoreRows = (analysis.engine === "rule-based" ? analysis.candidates : ragDiagnoses).map(
+      (c, idx) => ({
+        session_id: sessionId,
+        diagnosis: c.name,
+        likelihood: c.likelihood,
+        rank: idx + 1,
+      })
+    );
     const symptomRows = symptoms.map((s) => ({
       session_id: sessionId,
       symptom: s.text,
@@ -266,9 +275,6 @@ export default function DiagnosePage() {
     router.push(`/patients/${targetPatientId}`);
     router.refresh();
   };
-
-  const confidenceClass =
-    top && top.pct > 60 ? "" : top && top.pct > 40 ? "moderate" : top ? "low" : "";
 
   return (
     <div className="analysis-page">
@@ -306,7 +312,7 @@ export default function DiagnosePage() {
               </div>
               <div className="analysis-stat-card">
                 <span>Top match</span>
-                <strong>{analyzed && top ? top.short : "—"}</strong>
+                <strong>{topMatchLabel}</strong>
               </div>
             </div>
 
@@ -446,11 +452,11 @@ export default function DiagnosePage() {
             </h2>
             {analysis ? (
               <span className="analysis-engine-tag">
-                {analysis.engine === "rule-based" ? "Rule-based" : "LLM"}
+                {analysis.engine === "rule-based" ? "Rule-based" : "DSM-5-TR RAG"}
                 {isGuest ? " · guest" : ""}
               </span>
             ) : null}
-            {patientsListReady && hasClinicianPatients && analyzed ? (
+            {patientsListReady && hasClinicianPatients && canSave ? (
               <div className="analysis-add-patient-wrap" ref={addPatientWrapRef}>
                 <button
                   type="button"
@@ -491,6 +497,8 @@ export default function DiagnosePage() {
                 <FileSearch size={48} strokeWidth={1.15} />
                 <p>Add symptoms on the left, then press Analyze.</p>
               </div>
+            ) : analysis.engine === "rag" ? (
+              <RagResults result={analysis} openDxId={openDxId} onToggleDx={setOpenDxId} />
             ) : (
               <>
                 {top ? (
@@ -499,8 +507,8 @@ export default function DiagnosePage() {
                     <p>
                       Most closely matches <strong>{top.name}.</strong>
                     </p>
-                    <span className={`analysis-confidence-badge ${confidenceClass}`.trim()}>
-                      {top.pct > 60 ? "High confidence" : top.pct > 40 ? "Moderate confidence" : "Low confidence"}
+                    <span className={`analysis-dx-tier ${LIKELIHOOD_CLASS[top.likelihood]}`}>
+                      {top.likelihood} likelihood
                     </span>
                   </div>
                 ) : null}
@@ -531,15 +539,14 @@ export default function DiagnosePage() {
                           aria-expanded={open}
                         >
                           <span className="analysis-dx-name">{r.name}</span>
-                          <span className="analysis-dx-pct">{r.pct}%</span>
+                          <span className={`analysis-dx-tier ${LIKELIHOOD_CLASS[r.likelihood]}`}>
+                            {r.likelihood}
+                          </span>
                           <ChevronDown size={16} className={`analysis-dx-chevron ${open ? "open" : ""}`} aria-hidden />
                         </button>
                         {open ? (
                           <div className="analysis-dx-detail">
-                            <div className="bar">
-                              <span style={{ width: `${r.pct}%` }} />
-                            </div>
-                            <p style={{ margin: "0 0 0.35rem" }}>
+                            <p style={{ margin: "0.5rem 0 0.35rem" }}>
                               DSM-5 criteria met: {r.matched.length}/{r.criteriaCount}
                               {r.matched.length < r.minCriteria ? (
                                 <span className="minimum-badge" style={{ marginLeft: 6 }}>

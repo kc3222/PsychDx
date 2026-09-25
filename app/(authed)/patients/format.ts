@@ -4,6 +4,8 @@
  * (lib/guest/store.ts) produces structurally identical rows so one view renders both.
  */
 
+import type { Likelihood } from "@/lib/rag/types";
+
 export type PatientRow = {
   id: string;
   first_name: string;
@@ -26,7 +28,7 @@ export type SessionRow = {
 export type ScoreRow = {
   session_id: string;
   diagnosis: string;
-  confidence_pct: number;
+  likelihood: Likelihood;
   rank: number;
 };
 

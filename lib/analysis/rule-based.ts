@@ -7,8 +7,8 @@
  *   - the browser, for guest sessions (see lib/analysis/client.ts), and
  *   - the /api/analyze route handler, for signed-in users.
  *
- * When the signed-in path swaps to an LLM, only the route handler changes; guests keep
- * running this engine locally and the result shape stays the same.
+ * It is also the fallback for signed-in users whenever the RAG feature flag is off (see
+ * app/api/analyze/route.ts). Guests always run this engine locally.
  */
 
 export type AnalysisSymptom = {
@@ -18,13 +18,16 @@ export type AnalysisSymptom = {
   pattern: string;
 };
 
+import type { Likelihood } from "@/lib/rag/types";
+
 export type RiskLevel = "low" | "moderate" | "high" | "emergency";
 
 export type AnalysisCandidate = {
   id: string;
   name: string;
   short: string;
-  pct: number;
+  /** Same High / Moderate / Low scale as the RAG engine; there is no percentage. */
+  likelihood: Likelihood;
   matched: string[];
   unmatched: string[];
   criteriaCount: number;
@@ -33,10 +36,8 @@ export type AnalysisCandidate = {
 
 export type AnalysisRisk = { level: RiskLevel; triggers: string[] };
 
-export type AnalysisEngine = "rule-based" | "llm";
-
-export type AnalysisResult = {
-  engine: AnalysisEngine;
+export type RuleBasedResult = {
+  engine: "rule-based";
   candidates: AnalysisCandidate[];
   risk: AnalysisRisk;
 };
@@ -169,22 +170,29 @@ export function computeRisk(syms: AnalysisSymptom[]): AnalysisRisk {
   return { level: "low", triggers: [] };
 }
 
-export function runRuleBasedAnalysis(symptoms: AnalysisSymptom[]): AnalysisResult {
+/** Tier from a candidate's share of the total score (same cut-offs the old % badge used). */
+function toLikelihood(share: number): Likelihood {
+  if (share > 0.6) return "High";
+  if (share > 0.4) return "Moderate";
+  return "Low";
+}
+
+export function runRuleBasedAnalysis(symptoms: AnalysisSymptom[]): RuleBasedResult {
   const scored = DISEASES.map((disease) => ({ disease, ...scoreDisease(disease, symptoms) }));
   const total = scored.reduce((sum, r) => sum + r.score, 0);
 
   const candidates: AnalysisCandidate[] = scored
+    .sort((a, b) => b.score - a.score)
     .map((r) => ({
       id: r.disease.id,
       name: r.disease.name,
       short: r.disease.short,
-      pct: total > 0 ? Math.round((r.score / total) * 100) : 0,
+      likelihood: toLikelihood(total > 0 ? r.score / total : 0),
       matched: r.matched,
       unmatched: r.unmatched,
       criteriaCount: r.disease.criteria.length,
       minCriteria: r.disease.minCriteria,
-    }))
-    .sort((a, b) => b.pct - a.pct);
+    }));
 
   return { engine: "rule-based", candidates, risk: computeRisk(symptoms) };
 }

@@ -35,10 +35,20 @@ Create `.env.local` in the repo root:
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 SUPABASE_SERVICE_ROLE_KEY=<service role key>   # only needed for /api/admin/users POST
+
+# Optional: PsychDx-RAG diagnosis (lib/rag/config.ts, FRONTEND.md). Off unless exactly "true".
+RAG_DIAGNOSE_ENABLED=false
+RAG_URL=http://localhost:8000                   # defaults to this; Cloud Run URL when deployed
+RAG_API_KEY=<same value as the RAG service's RAG_API_KEY>
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` is server-only and must never be referenced from a client
 component. Without it the rest of the app works; only admin user *creation* fails.
+
+`RAG_DIAGNOSE_ENABLED` switches signed-in analyses from the local rule-based engine to the
+PsychDx-RAG service. With it unset or anything other than `true`, the rule-based engine runs
+and `RAG_URL` / `RAG_API_KEY` are not needed. All three are read in `lib/rag/config.ts`. `RAG_API_KEY` is server-only, like the service
+role key. Migration V4 (likelihood tiers) must be applied before running this version, flag on or off.
 
 Apply the database schema with the Supabase CLI:
 
@@ -129,8 +139,8 @@ Defined in `supabase/migrations/`, newest last:
   including names, age range, gender, optional reference id, and `active`/`archived` status.
 - **`sessions`** — one clinical encounter / analysis run per row, versioned per patient
   (v1 = initial assessment, v2+ = follow-up).
-- **`diagnostic_scores`** — one row per diagnosis candidate per session, with
-  `confidence_pct` and `rank`.
+- **`diagnostic_scores`** — one row per diagnosis candidate per session, with a
+  `likelihood` tier (High / Moderate / Low) and `rank`.
 - **`session_symptoms`** — the symptoms captured for a session.
 
 ### Access control

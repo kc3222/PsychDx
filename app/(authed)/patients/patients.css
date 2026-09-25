@@ -472,7 +472,7 @@
 
 .patients-view .diagnostic-row {
   display: grid;
-  grid-template-columns: 150px 1fr 52px;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
@@ -481,19 +481,6 @@
 .patients-view .diag-name {
   font-size: 14px;
   color: var(--text-2);
-}
-
-.patients-view .diag-bar {
-  height: 10px;
-  border-radius: 999px;
-  background: var(--brand-50);
-  overflow: hidden;
-}
-
-.patients-view .diag-bar span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-700));
 }
 
 .patients-view .diag-val {

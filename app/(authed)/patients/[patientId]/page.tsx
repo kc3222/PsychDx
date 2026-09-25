@@ -74,7 +74,7 @@ export default async function PatientDetailPage({
   const { data: scores } = sessionIds.length
     ? await supabase
         .from("diagnostic_scores")
-        .select("session_id, diagnosis, confidence_pct, rank")
+        .select("session_id, diagnosis, likelihood, rank")
         .in("session_id", sessionIds)
         .returns<ScoreRow[]>()
     : { data: [] as ScoreRow[] };

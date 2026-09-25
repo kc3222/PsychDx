@@ -191,7 +191,7 @@ export default function PatientDetailView({
                     <span className="status-active">{s.status === "active" ? "Active" : "Archived"}</span>
                     {topDx ? (
                       <span className={`dx-badge ${dxClass(short)}`} style={{ marginLeft: "auto" }}>
-                        {short} {Math.round(Number(topDx.confidence_pct) || 0)}%
+                        {short} · {topDx.likelihood}
                       </span>
                     ) : null}
                     <span className="dot-menu">···</span>
@@ -280,10 +280,7 @@ export default function PatientDetailView({
                   {ranked.map((r) => (
                     <div key={`${s.id}-${r.rank}-${r.diagnosis}`} className="diagnostic-row">
                       <span className="diag-name">{r.diagnosis}</span>
-                      <div className="diag-bar">
-                        <span style={{ width: `${Math.max(0, Math.min(100, Number(r.confidence_pct)))}%` }} />
-                      </div>
-                      <span className="diag-val">{Math.round(Number(r.confidence_pct))}%</span>
+                      <span className="diag-val">{r.likelihood}</span>
                     </div>
                   ))}
                 </div>
