@@ -15,6 +15,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { AnalysisCandidate } from "@/lib/analysis/rule-based";
+import type { Likelihood } from "@/lib/rag/types";
 import { todayLocalDate } from "@/lib/date";
 
 export type GuestPatientRow = {
@@ -43,7 +44,7 @@ export type GuestSessionRow = {
 export type GuestScoreRow = {
   session_id: string;
   diagnosis: string;
-  confidence_pct: number;
+  likelihood: Likelihood;
   rank: number;
 };
 
@@ -158,7 +159,7 @@ export function saveGuestAnalysis({
       ...candidates.map((c, idx) => ({
         session_id: session.id,
         diagnosis: c.name,
-        confidence_pct: c.pct,
+        likelihood: c.likelihood,
         rank: idx + 1,
       })),
     ],

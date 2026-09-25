@@ -33,8 +33,9 @@ The sidebar also links `/history` and `/reports`. Those routes are not implement
 - `/api/admin/users` (GET, POST): List profiles; create an Auth user and align its
   `profiles` row. Admin-only.
 - `/api/admin/users/[id]` (GET, PATCH): Read or partially update one profile. Admin-only.
-- `/api/analyze` (POST): Run a differential analysis for a signed-in clinician. Guests never
-  call it — they run the same engine in the browser.
+- `/api/analyze` (POST): Run a differential analysis for a signed-in clinician, through the
+  PsychDx-RAG service when `RAG_DIAGNOSE_ENABLED=true`, else the rule-based engine. Guests
+  never call it — they run the rule-based engine in the browser.
 
 ## Guest sessions
 
