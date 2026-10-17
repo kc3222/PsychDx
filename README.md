@@ -110,13 +110,13 @@ Most directories carry their own `README.md` describing that route in detail.
 | `/home` | Client | Symptom capture, scoring, risk banner, saves a session |
 | `/patients` | Server | Patient list with latest session and top diagnosis |
 | `/patients/[patientId]` | Server | Session history, scores, symptoms for one patient |
+| `/history` | Server | Every saved analysis across patients, newest first, with filters |
+| `/reports` | Server | Placeholder ("coming soon") page |
 | `/auth/signout` | POST | Server-side `signOut()` then redirect to `/` |
 | `/api/admin/users` | GET/POST | List profiles; create Auth user + profile row |
 | `/api/admin/users/[id]` | GET/PATCH | Read or partially update one profile |
 | `/api/analyze` | POST | Differential analysis for a signed-in clinician |
 
-The sidebar also links to `/history` and `/reports`; those routes do not exist yet and
-currently 404.
 
 ## Guest sessions
 

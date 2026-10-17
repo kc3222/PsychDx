@@ -21,12 +21,14 @@ neither a user nor a guest cookie, and wraps its children in `AppShell` (inside 
   banner, and saving the result as a session against a patient.
 - `/patients`: Patient list with each patient's latest session and top diagnosis.
 - `/patients/[patientId]`: One patient's session history, diagnostic scores, and symptoms.
+- `/history`: Every saved analysis across the caseload, newest first, filterable by patient,
+  date range, top likelihood, and status.
 
-Both patient routes are server components that load rows and hand them to a client view
-(`PatientsView`, `PatientDetailView`). The split exists so a guest session can render the
+The patient routes and `/history` are server components that load rows and hand them to a client view
+(`PatientsView`, `PatientDetailView`, `HistoryView`). The split exists so a guest session can render the
 same views from the per-tab guest store, which only the browser can read.
 
-The sidebar also links `/history` and `/reports`. Those routes are not implemented yet.
+The sidebar also links `/reports`, which is still a "coming soon" placeholder.
 
 ### API
 
@@ -62,6 +64,7 @@ with that route:
 - `(authed)/shell.css` — app shell and sidebar, imported by the group layout.
 - `(authed)/home/analysis.css`, `(authed)/home/diagnose.css`
 - `(authed)/patients/patients.css`
+- `(authed)/history/history.css`
 - `login/auth.css`, re-exported by `signup/auth.css`
 
 ## Notes

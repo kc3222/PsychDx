@@ -1,0 +1,308 @@
+/* History route (/history) — see history/layout.tsx */
+
+/* --- History: shell (mirrors the patients list header/body rhythm) --- */
+.history-view {
+  margin: -1.6rem -2rem -2rem;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  --history-shell-x: 24px;
+}
+
+/* --- History: header --- */
+.history-topbar {
+  padding: 18px var(--history-shell-x);
+  min-height: 72px;
+  box-sizing: border-box;
+  border-bottom: 0.5px solid var(--hairline);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-topbar a:hover {
+  text-decoration: none;
+}
+
+.history-topbar-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.history-topbar-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --- History: filter bar --- */
+.history-filters {
+  padding: 8px var(--history-shell-x);
+  min-height: 46px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.history-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-filter select {
+  margin: 0;
+  width: auto;
+  padding: 5px 8px;
+  font-size: 13px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+  color: var(--text);
+}
+
+.history-reset {
+  margin-left: auto;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.history-reset:hover {
+  text-decoration: underline;
+}
+
+/* --- History: feed --- */
+.history-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px var(--history-shell-x) 32px;
+}
+
+.history-group + .history-group {
+  margin-top: 20px;
+}
+
+.history-group-date {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 0.5px solid var(--hairline);
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.history-entry:hover {
+  border-color: var(--border-strong);
+  text-decoration: none;
+}
+
+.history-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--brand-100);
+  color: var(--brand-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.history-entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.history-patient {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.history-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.history-chip {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--n-100);
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.history-chip-more {
+  background: none;
+  color: var(--muted);
+}
+
+.history-dx {
+  flex-shrink: 0;
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.history-dx-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.history-dx-none {
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.history-lk {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.history-lk-high {
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-200);
+}
+
+.history-lk-moderate {
+  background: var(--warn-50);
+  color: var(--warn-700);
+  border: 1px solid var(--warn-200);
+}
+
+.history-lk-low {
+  background: var(--ok-50);
+  color: var(--ok-700);
+  border: 1px solid var(--ok-200);
+}
+
+/* --- History: empty states --- */
+.history-empty {
+  max-width: 420px;
+  margin: 32px auto 0;
+  padding: 32px 28px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.history-empty h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.history-empty p {
+  margin: 8px auto 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+.history-empty h2 + button {
+  margin-top: 16px;
+}
+
+.history-empty a:hover {
+  text-decoration: none;
+}
+
+.history-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* --- Responsive --- */
+@media (max-width: 980px) {
+  .history-view {
+    margin: -1.1rem -1.1rem -1.5rem;
+    --history-shell-x: 16px;
+  }
+
+  .history-entry {
+    flex-wrap: wrap;
+  }
+
+  .history-dx {
+    max-width: none;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 48px;
+  }
+}
