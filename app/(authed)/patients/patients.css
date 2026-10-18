@@ -234,6 +234,10 @@
   gap: 8px;
 }
 
+.patients-view .detail-actions a:hover {
+  text-decoration: none;
+}
+
 .patients-view .detail-body {
   flex: 1;
   overflow-y: auto;

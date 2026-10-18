@@ -9,6 +9,7 @@
  */
 
 import Link from "next/link";
+import { blueButtonClassName } from "@/components/ui/BlueButton";
 import { useIsGuest } from "@/lib/guest/provider";
 import { useGuestData } from "@/lib/guest/store";
 import NewAnalysisButton from "../NewAnalysisButton";
@@ -144,6 +145,9 @@ export default function PatientDetailView({
           <div className="detail-sub">{formatAgeGender(resolvedPatient)}</div>
         </div>
         <div className="detail-actions">
+          <Link href={`/reports?patient=${resolvedPatient.id}`} className={blueButtonClassName("secondary")}>
+            Report
+          </Link>
           <NewAnalysisButton patientId={resolvedPatient.id} />
         </div>
       </div><div className="detail-main-tabs">
