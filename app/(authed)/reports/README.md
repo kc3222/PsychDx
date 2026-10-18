@@ -1,11 +1,38 @@
 # `/reports`
 
-Placeholder route. The sidebar has always linked here, so without a page the tab rendered the
-Next.js 404/error screen — this renders a "coming soon" page instead.
+A printable clinical summary for one patient, built from their saved sessions. The patient is
+chosen with the picker and kept in the URL as `?patient=<id>`, so a report can be linked to —
+the patient detail header has a **Report** button that does exactly that.
 
-- `page.tsx` — server component, no data access. It renders the shared
-  [`ComingSoon`](../_components/ComingSoon.tsx) body with the copy for this route.
-- `layout.tsx` — imports the shared `_components/placeholder.css`.
+- `page.tsx` — server component. Loads the clinician's patients for the picker (RLS scopes
+  them). When `?patient=` names one of those patients it also loads that patient's `sessions`,
+  every `diagnostic_scores` row for them, and their `session_symptoms`. An unknown or foreign
+  id is treated as "no patient selected"; nothing redirects.
+- `ReportView.tsx` — client component. Changing the picker pushes a new `?patient=` URL,
+  which re-runs the server component. Everything else is derived in the browser.
+- `reports.css` — route styles (`reports-*`), imported by `layout.tsx`, including the
+  `@media print` rules.
 
-Nothing here queries Supabase, so guests and signed-in users see the same page. When Reports is
-built for real, replace `page.tsx` and give the route its own `reports.css`.
+## The report
+
+Sessions are listed oldest first. Active sessions only by default; an "Include archived"
+checkbox appears when the patient has archived sessions.
+
+- **Summary** — session count, date span, the latest session's rank-1 diagnosis and
+  likelihood, and whether the primary diagnosis (or its tier) changed since the first session.
+- **Diagnostic trend** — one row per session with up to three ranked diagnoses.
+- **Symptoms** — each distinct symptom with how many sessions noted it, first/last noted
+  date, and whether it appears in the latest session.
+- A fixed footer stating that this is decision support and that likelihood is a tier, not a
+  probability (see `lib/rag/types.ts`).
+
+## Export
+
+"Print / Save PDF" calls `window.print()`. The print stylesheet hides the sidebar, header and
+picker and prints only the report document, so PDF export is the browser's own Save as PDF —
+nothing is generated or stored server-side.
+
+## Guests
+
+For a guest the server returns `ReportView` with empty rows and only the requested id; the
+view resolves the patient and their sessions, scores and symptoms from the per-tab guest store.

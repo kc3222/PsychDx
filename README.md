@@ -111,7 +111,7 @@ Most directories carry their own `README.md` describing that route in detail.
 | `/patients` | Server | Patient list with latest session and top diagnosis |
 | `/patients/[patientId]` | Server | Session history, scores, symptoms for one patient |
 | `/history` | Server | Every saved analysis across patients, newest first, with filters |
-| `/reports` | Server | Placeholder ("coming soon") page |
+| `/reports` | Server | Printable per-patient summary: diagnostic trend and symptom frequency |
 | `/auth/signout` | POST | Server-side `signOut()` then redirect to `/` |
 | `/api/admin/users` | GET/POST | List profiles; create Auth user + profile row |
 | `/api/admin/users/[id]` | GET/PATCH | Read or partially update one profile |
